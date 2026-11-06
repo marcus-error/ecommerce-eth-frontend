@@ -155,11 +155,12 @@ export default function ProductManagement({ initialCategory = '', onClearCategor
       const res = await adminService.uploadMultiple(form);
       if (res.success && res.files) {
         const uploadedUrls = res.files.map((f) => f.url);
+        const isCloudinary = res.files.some((f) => f.url?.startsWith('http'));
         setFormData((prev) => ({
           ...prev,
           images: [...prev.images, ...uploadedUrls]
         }));
-        showToast(`Uploaded ${res.files.length} images successfully.`);
+        showToast(`Uploaded ${res.files.length} image(s) successfully ${isCloudinary ? 'to Cloudinary CDN' : 'to storage'}.`);
       }
     } catch (err) {
       alert(err.message || 'Image upload failed.');
@@ -207,7 +208,8 @@ export default function ProductManagement({ initialCategory = '', onClearCategor
       setModalOpen(false);
       loadData();
     } catch (err) {
-      alert(err.message || 'Failed to save product.');
+      const errMsg = err.response?.data?.message || err.message || 'Failed to save product.';
+      alert(errMsg);
     } finally {
       setSaveLoading(false);
     }
@@ -272,7 +274,16 @@ export default function ProductManagement({ initialCategory = '', onClearCategor
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <button
-            onClick={() => (onBack ? onBack() : navigate(-1))}
+            onClick={() => {
+              if (modalOpen) {
+                setModalOpen(false);
+                setEditingProduct(null);
+              } else if (initialCategory && initialCategory !== 'all') {
+                if (onClearCategory) onClearCategory();
+              } else if (onBack) {
+                onBack();
+              }
+            }}
             style={{
               display: 'inline-flex',
               alignItems: 'center',

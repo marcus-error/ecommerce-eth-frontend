@@ -611,11 +611,6 @@ export default function ProductListing() {
         {toastMessage}
       </div>
 
-      {/* Top Banner */}
-      <div style={{ background: 'linear-gradient(90deg, #2a0520, #420833, #2a0520)', color: 'var(--gold2)', padding: '7px 16px', fontSize: '11px', textAlign: 'center', letterSpacing: '0.1em', textTransform: 'uppercase', borderBottom: '1px solid rgba(212,175,55,0.2)' }}>
-        ✨ Handcrafted Imitation Jewellery · 24k Matte Gold Finish · Free Insured Shipping Across India
-      </div>
-
       {/* Header */}
       <header className="nav sc" style={{ position: 'sticky', top: 0, zIndex: 100 }}>
         <Link className="brand" to="/">

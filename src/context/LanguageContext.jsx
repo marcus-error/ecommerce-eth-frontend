@@ -36,6 +36,9 @@ export const translations = {
     // Section Titles
     ourCollections: 'Our Collections',
     ourCollectionsSub: 'Exquisite designs across all heirloom categories.',
+    newArrivals: 'New Arrivals',
+    newProducts: 'New Products',
+    newProductsSub: 'Recently handcrafted heirloom pieces, fresh from our master artisans.',
     shopTheEdit: 'Shop the Edit',
     shopTheEditSub: 'Handcrafted bridal pieces, ready to order.',
     inEveryDetail: 'In Every Detail.',
@@ -284,6 +287,9 @@ export const translations = {
     // Section Titles
     ourCollections: 'எங்கள் தொகுப்புகள்',
     ourCollectionsSub: 'பாரம்பரியம் மற்றும் புதுமை கலந்த உன்னத நகை வகைகள்.',
+    newArrivals: 'புதிய தயாரிப்புகள்',
+    newProducts: 'புதிய படைப்புகள்',
+    newProductsSub: 'எங்கள் கைவினைஞர்களால் புதிதாக சேர்க்கப்பட்ட அரிய பாரம்பரிய நகைகள்.',
     shopTheEdit: 'சிறப்பு நகை தேர்வுகள்',
     shopTheEditSub: 'கைவினைஞர்களால் செதுக்கப்பட்ட மணமகள் நகைகள்.',
     inEveryDetail: 'ஒவ்வொரு நுணுக்கத்திலும் நேர்த்தி.',

@@ -81,6 +81,10 @@ export default function Landing() {
 
   // Dynamic Products from Database
   const [shopProducts, setShopProducts] = useState(INITIAL_SHOP_PRODUCTS);
+  const newProducts = (shopProducts.filter((p) => p.is_new).length >= 2
+    ? shopProducts.filter((p) => p.is_new)
+    : shopProducts
+  ).slice(0, 6);
 
   // Customer Reviews State
   const [reviews, setReviews] = useState([
@@ -118,12 +122,20 @@ export default function Landing() {
     }
   ]);
   const reviewRailRef = useRef(null);
+  const newArrivalsRailRef = useRef(null);
+
+  const scrollNewArrivalsRail = (offset) => {
+    if (newArrivalsRailRef.current) {
+      newArrivalsRailRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
-    reviewService.getReviews({ limit: 12 })
+    reviewService.getReviews({ limit: 30 })
       .then((res) => {
         if (res.success && res.reviews && res.reviews.length > 0) {
-          setReviews(res.reviews);
+          const sorted = [...res.reviews].sort((a, b) => (b.id || 0) - (a.id || 0) || new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+          setReviews(sorted);
         }
       })
       .catch((err) => {
@@ -155,10 +167,10 @@ export default function Landing() {
   }, []);
 
   useEffect(() => {
-    productService.getProducts({ limit: 12 })
+    productService.getProducts({ limit: 100 })
       .then((res) => {
         if (res.success && res.products && res.products.length > 0) {
-          const mapped = res.products.slice(0, 6).map((p) => ({
+          const mapped = res.products.map((p) => ({
             id: p.id,
             name: p.name,
             c: p.category?.name || 'Jewellery',
@@ -166,7 +178,8 @@ export default function Landing() {
             price: p.selling_price || p.price,
             i: p.images?.[0]?.image_url || p.image_url || 'var(--i-neck)',
             slug: p.category?.slug || 'necklaces',
-            is_new: !!p.is_new || (Date.now() - new Date(p.createdAt || 0).getTime() < 14 * 86400000)
+            is_new: !!p.is_new || (Date.now() - new Date(p.createdAt || 0).getTime() < 30 * 86400000),
+            createdAt: p.createdAt
           }));
           setShopProducts(mapped);
         }
@@ -433,14 +446,8 @@ export default function Landing() {
         {toastMessage}
       </div>
 
-      {/* Fixed Header Container: Stacks Top Bar & Nav Without Any Overlap */}
-      <div className="site-header-wrapper">
-        <div className="site-top-bar">
-          <span>{isTamil ? '✨ தி எத்னிக் எடிட் · பாரம்பரிய கோயில் மற்றும் ஆண்டிக் தங்க நகைகள் · இலவச காப்பீட்டு விநியோகம்' : '✨ Welcome to The Ethnic Edit · Handcrafted Temple & Antique Jewellery · Complimentary Insured Shipping'}</span>
-        </div>
-
-        {/* Header */}
-        <header className={`nav ${isScrolled ? 'sc' : ''}`} id="nav">
+      {/* Header */}
+      <header className={`nav ${isScrolled ? 'sc' : ''}`} id="nav">
         <a className="brand" href="#home" aria-label="The Ethnic Edit home">
           <span className="logo"></span>
           <span>
@@ -461,6 +468,15 @@ export default function Landing() {
             style={{ background: 'none', border: 'none', color: 'inherit', padding: 0, cursor: 'pointer', font: 'inherit' }}
           >
             {t('collections', 'Collections')}
+          </button>
+          <button
+            onClick={() => {
+              setIsMenuOpen(false);
+              handleProtectedNavigation('#new-products');
+            }}
+            style={{ background: 'none', border: 'none', color: 'inherit', padding: 0, cursor: 'pointer', font: 'inherit', whiteSpace: 'nowrap' }}
+          >
+            {t('newArrivals', 'New Arrivals')}
           </button>
           <button
             onClick={() => {
@@ -600,7 +616,6 @@ export default function Landing() {
           </button>
         </div>
       </header>
-    </div>
 
       <main>
         {/* Hero Section */}
@@ -774,7 +789,58 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* Shop the Edit Section - Exactly Matching Design and Reference Image */}
+        {/* New Products Section - Newly Added Pieces by Admin (Arched rail matching collections) */}
+        <section className="sec" id="new-products" style={{ paddingTop: 0 }}>
+          <div className="hd rv">
+            <div className="kick" style={{ justifyContent: 'center' }}>
+              {t('newArrivals', 'New Arrivals')}
+            </div>
+            <h2>{t('newProducts', 'New Products')}</h2>
+            <p className="ui" style={{ fontSize: '15px' }}>
+              {t('newProductsSub', 'Recently handcrafted heirloom pieces, fresh from our master artisans.')}
+            </p>
+          </div>
+          <div className="rail" ref={newArrivalsRailRef}>
+            {newProducts.map((p) => {
+              const imgBg = resolveSafeImage(p.i, 'var(--i-neck)');
+              return (
+                <article
+                  className="cc rv"
+                  key={`new-${p.id}`}
+                  onClick={() => handleProtectedNavigation(`/product/${p.id}`)}
+                  style={{ cursor: 'pointer', textAlign: 'center' }}
+                >
+                  <div
+                    className="ph"
+                    style={{ backgroundImage: imgBg, position: 'relative' }}
+                    role="img"
+                    aria-label={p.name}
+                  >
+                    <div style={{ position: 'absolute', top: '16px', left: '50%', transform: 'translateX(-50%)', zIndex: 2, background: 'linear-gradient(135deg, #f6dda0, #d4af37)', color: '#1a0418', fontSize: '10px', fontWeight: '700', padding: '3px 12px', borderRadius: '999px', textTransform: 'uppercase', letterSpacing: '0.12em', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', whiteSpace: 'nowrap' }}>
+                      {isTamil ? '✨ புதியது' : '✨ New'}
+                    </div>
+                  </div>
+                  <span style={{ display: 'block', marginTop: '14px', font: '500 clamp(17px, 1.6vw, 20px) var(--font-serif)', color: 'var(--gold2)' }}>
+                    {p.name} →
+                  </span>
+                  <div style={{ marginTop: '4px', font: '600 clamp(14px, 1.1vw, 16px) var(--font-sans)', color: 'var(--gold)' }}>
+                    {inr(p.price || p.selling_price)}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+          <div className="railbar">
+            <button className="ar" aria-label="Previous" onClick={() => scrollNewArrivalsRail(-280)}>
+              <svg className="i" viewBox="0 0 24 24"><path d="m15 19-7-7 7-7" /></svg>
+            </button>
+            <button className="ar" aria-label="Next" onClick={() => scrollNewArrivalsRail(280)}>
+              <svg className="i" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7" /></svg>
+            </button>
+          </div>
+        </section>
+
+        {/* Shop the Edit Section - Displays All Catalogue Items */}
         <section className="sec" id="shop" style={{ paddingTop: 0 }}>
           <div className="hd rv">
             <h2>{t('shopTheEdit', 'Shop the Edit')}</h2>

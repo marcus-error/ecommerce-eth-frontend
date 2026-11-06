@@ -126,7 +126,14 @@ export default function CategoryManagement({ onViewProducts, onBack }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <button
-            onClick={() => (onBack ? onBack() : navigate(-1))}
+            onClick={() => {
+              if (modalOpen) {
+                setModalOpen(false);
+                setEditingCategory(null);
+              } else if (onBack) {
+                onBack();
+              }
+            }}
             style={{
               display: 'inline-flex',
               alignItems: 'center',

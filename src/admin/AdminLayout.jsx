@@ -19,20 +19,35 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('overview');
+  const [tabHistory, setTabHistory] = useState(['overview']);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedCategoryForProducts, setSelectedCategoryForProducts] = useState('all');
 
+  const handleSelectTab = (tabId) => {
+    if (tabId !== activeTab) {
+      setTabHistory((prev) => [...prev, tabId]);
+      setActiveTab(tabId);
+      navigate(`/admin/${tabId}`);
+    }
+  };
+
   const handleViewCategoryProducts = (catId) => {
     setSelectedCategoryForProducts(catId ? catId.toString() : 'all');
-    setActiveTab('products');
+    handleSelectTab('products');
   };
 
   const handleAdminBack = () => {
-    if (activeTab !== 'overview') {
+    if (tabHistory.length > 1) {
+      const nextHist = [...tabHistory];
+      nextHist.pop(); // remove current active tab
+      const prevTab = nextHist[nextHist.length - 1];
+      setTabHistory(nextHist);
+      setActiveTab(prevTab);
+      navigate(`/admin/${prevTab}`);
+    } else {
+      // Already at root of admin dashboard; stay on overview, NEVER leave to '/'
       setActiveTab('overview');
       navigate('/admin/dashboard');
-    } else {
-      navigate('/');
     }
   };
 
@@ -114,7 +129,7 @@ export default function AdminLayout() {
               <button
                 key={item.id}
                 onClick={() => {
-                  setActiveTab(item.id);
+                  handleSelectTab(item.id);
                   setSidebarOpen(false);
                 }}
                 style={{
@@ -286,7 +301,7 @@ export default function AdminLayout() {
 
         {/* Tab Content Container */}
         <div style={{ padding: '28px', flex: 1, overflowY: 'auto' }}>
-          {activeTab === 'overview' && <DashboardOverview onNavigate={setActiveTab} onBack={handleAdminBack} />}
+          {activeTab === 'overview' && <DashboardOverview onNavigate={handleSelectTab} onBack={handleAdminBack} />}
           {activeTab === 'products' && (
             <ProductManagement
               initialCategory={selectedCategoryForProducts}
