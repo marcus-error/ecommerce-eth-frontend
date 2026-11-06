@@ -59,10 +59,12 @@ export default function ProductManagement({ initialCategory = '', onClearCategor
   const [customImageUrl, setCustomImageUrl] = useState('');
   const [saveLoading, setSaveLoading] = useState(false);
   const [toast, setToast] = useState('');
+  const [toastType, setToastType] = useState('success');
 
-  const showToast = (msg) => {
+  const showToast = (msg, type = 'success') => {
     setToast(msg);
-    setTimeout(() => setToast(''), 3000);
+    setToastType(type);
+    setTimeout(() => setToast(''), 3500);
   };
 
   const loadData = async () => {
@@ -163,7 +165,7 @@ export default function ProductManagement({ initialCategory = '', onClearCategor
         showToast(`Uploaded ${res.files.length} image(s) successfully ${isCloudinary ? 'to Cloudinary CDN' : 'to storage'}.`);
       }
     } catch (err) {
-      alert(err.message || 'Image upload failed.');
+      showToast(err.message || 'Image upload failed.', 'error');
     } finally {
       setUploadingFiles(false);
       e.target.value = '';
@@ -205,11 +207,12 @@ export default function ProductManagement({ initialCategory = '', onClearCategor
           showToast(`"${res.product.name}" published! It is now live on the customer website.`);
         }
       }
+      try { window.dispatchEvent(new Event('products_updated')); } catch (e) {}
       setModalOpen(false);
       loadData();
     } catch (err) {
       const errMsg = err.response?.data?.message || err.message || 'Failed to save product.';
-      alert(errMsg);
+      showToast(errMsg, 'error');
     } finally {
       setSaveLoading(false);
     }
@@ -227,9 +230,10 @@ export default function ProductManagement({ initialCategory = '', onClearCategor
             ? 'Product published! Visible on customer storefront.'
             : 'Product unpublished! Hidden from customer storefront.'
         );
+        try { window.dispatchEvent(new Event('products_updated')); } catch (e) {}
       }
     } catch (err) {
-      alert(err.message || 'Failed to toggle visibility.');
+      showToast(err.message || 'Failed to toggle visibility.', 'error');
     }
   };
 
@@ -241,9 +245,10 @@ export default function ProductManagement({ initialCategory = '', onClearCategor
       if (res.success) {
         setProducts((prev) => prev.filter((p) => p.id !== id));
         showToast(`Product "${name}" deleted.`);
+        try { window.dispatchEvent(new Event('products_updated')); } catch (e) {}
       }
     } catch (err) {
-      alert(err.message || 'Failed to delete product.');
+      showToast(err.message || 'Failed to delete product.', 'error');
     }
   };
 
@@ -256,17 +261,18 @@ export default function ProductManagement({ initialCategory = '', onClearCategor
             position: 'fixed',
             top: '84px',
             right: '28px',
-            background: 'linear-gradient(135deg, #f6dda0, #d4af37)',
-            color: '#1a0418',
+            background: toastType === 'error' ? 'rgba(239,68,68,0.95)' : 'linear-gradient(135deg, #f6dda0, #d4af37)',
+            color: toastType === 'error' ? '#fff' : '#1a0418',
             padding: '12px 22px',
             borderRadius: '999px',
             fontWeight: 600,
             fontSize: '14px',
             zIndex: 9999,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.5)'
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+            border: toastType === 'error' ? '1px solid #fca5a5' : 'none'
           }}
         >
-          ✓ {toast}
+          {toastType === 'error' ? '⚠ ' : '✓ '} {toast}
         </div>
       )}
 
@@ -278,10 +284,9 @@ export default function ProductManagement({ initialCategory = '', onClearCategor
               if (modalOpen) {
                 setModalOpen(false);
                 setEditingProduct(null);
-              } else if (initialCategory && initialCategory !== 'all') {
+              } else {
                 if (onClearCategory) onClearCategory();
-              } else if (onBack) {
-                onBack();
+                if (onBack) onBack();
               }
             }}
             style={{

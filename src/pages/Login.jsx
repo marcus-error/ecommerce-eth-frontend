@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Eye, EyeOff, ArrowLeft, ShieldCheck, CheckCircle2, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useStore } from '../context/StoreContext';
 import '../EthnicEdit.css';
 
 export default function Login() {
@@ -13,6 +14,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const { login, logout, isAuthenticated, user } = useAuth();
+  const { storeName } = useStore();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -147,8 +149,8 @@ export default function Login() {
           <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg, #f6dda0, #d4af37)', margin: '0 auto 16px', display: 'grid', placeItems: 'center', color: '#1a0418', fontSize: '24px', fontWeight: 'bold' }}>
             ✦
           </div>
-          <h2 style={{ fontSize: '26px', fontFamily: '"Cormorant Garamond", serif', color: 'var(--gold2)', letterSpacing: '0.06em', margin: 0 }}>
-            THE ETHNIC EDIT
+          <h2 style={{ fontSize: '26px', fontFamily: 'var(--font-serif)', color: 'var(--gold2)', letterSpacing: '0.06em', margin: 0 }}>
+            {storeName}
           </h2>
           <span style={{ fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--gold)', opacity: 0.8, display: 'block', marginTop: '4px', marginBottom: '24px' }}>
             Client Sign In · Imitation Jewellery

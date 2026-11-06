@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useStore } from '../context/StoreContext';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ export default function AdminLogin() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const { storeName } = useStore();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -82,8 +84,8 @@ export default function AdminLogin() {
           ✦
         </div>
 
-        <h2 style={{ fontSize: '26px', fontFamily: '"Cormorant Garamond", serif', color: 'var(--gold2)', letterSpacing: '0.06em', marginBottom: '6px' }}>
-          THE ETHNIC EDIT
+        <h2 style={{ fontSize: '26px', fontFamily: 'var(--font-serif)', color: 'var(--gold2)', letterSpacing: '0.06em', marginBottom: '6px' }}>
+          {storeName}
         </h2>
         <span style={{ fontSize: '12px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--gold)', opacity: 0.8, display: 'block', marginBottom: '28px' }}>
           Admin Portal

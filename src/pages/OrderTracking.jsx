@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { orderService } from '../services/api';
+import { useStore } from '../context/StoreContext';
 import { Package, Truck, CheckCircle2, Clock, MapPin, ArrowLeft } from 'lucide-react';
 import '../EthnicEdit.css';
 
@@ -11,6 +12,7 @@ const ORDER_STEPS = ['Pending', 'Confirmed', 'Processing', 'Packed', 'Shipped', 
 export default function OrderTracking({ initialOrderNumber, onClose }) {
   const params = useParams();
   const navigate = useNavigate();
+  const { storeSettings, storeName } = useStore();
   const activeOrderNum = initialOrderNumber || params.orderNumber || '';
 
   const [query, setQuery] = useState(activeOrderNum === 'prompt' ? '' : activeOrderNum);
@@ -263,11 +265,11 @@ export default function OrderTracking({ initialOrderNumber, onClose }) {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg)', color: 'var(--cream)' }}>
       {/* Header */}
       <header className="nav sc" style={{ position: 'sticky', top: 0, zIndex: 100 }}>
-        <Link className="brand" to="/">
+        <Link className="brand" to="/" aria-label={`${storeName} home`}>
           <span className="logo"></span>
           <span>
-            <b>THE ETHNIC EDIT</b>
-            <small>Tradition, Beautifully Curated.</small>
+            <b>{storeName}</b>
+            <small>{storeSettings.tagline || 'Tradition, Beautifully Curated.'}</small>
           </span>
         </Link>
         <nav className="menu open" style={{ display: 'flex' }}>
@@ -290,7 +292,7 @@ export default function OrderTracking({ initialOrderNumber, onClose }) {
       {/* Footer with Powered by Aminoid */}
       <footer style={{ marginTop: 'auto', borderTop: '1px solid var(--line)', padding: '24px', background: 'var(--panel)', fontSize: '13px' }}>
         <div style={{ maxWidth: '880px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <span>© {new Date().getFullYear()} The Ethnic Edit. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} {storeName}. All rights reserved.</span>
           <span>
             Powered by{' '}
             <a href="https://www.aminoid.in/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold2)', textDecoration: 'underline', fontWeight: 500 }}>

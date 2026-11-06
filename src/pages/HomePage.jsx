@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { productService, categoryService, bannerService } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useStore } from '../context/StoreContext';
 import ProductDetailModal from '../components/ProductDetailModal';
 import {
   Search,
@@ -327,6 +328,7 @@ export const FALLBACK_PRODUCTS = [
 export default function HomePage() {
   const { cartCount, wishlistCount, addToCart, toggleWishlist, isInWishlist, recentlyViewed } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
+  const { storeName } = useStore();
   const navigate = useNavigate();
 
   const [products, setProducts] = useState(FALLBACK_PRODUCTS);
@@ -479,7 +481,7 @@ export default function HomePage() {
   const handleNewsletterSubmit = (e) => {
     e.preventDefault();
     if (newsletterEmail.trim()) {
-      showToast('Thank you for subscribing to The Ethnic Edit Royal Circle!');
+      showToast(`Thank you for subscribing to ${storeName} Royal Circle!`);
       setNewsletterEmail('');
     }
   };
@@ -532,7 +534,7 @@ export default function HomePage() {
           <Link className="brand" to="/" style={{ margin: 0, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span className="logo" style={{ width: '38px', height: '38px' }}></span>
             <span>
-              <b style={{ fontSize: '20px', letterSpacing: '0.08em', color: 'var(--gold2)', fontFamily: '"Cormorant Garamond", serif' }}>THE ETHNIC EDIT</b>
+              <b style={{ fontSize: '20px', letterSpacing: '0.08em', color: 'var(--gold2)', fontFamily: 'var(--font-serif)' }}>{storeName}</b>
               <small style={{ fontSize: '10px', color: 'var(--gold)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Imitation Jewellery Emporium</small>
             </span>
           </Link>
@@ -1261,8 +1263,8 @@ export default function HomePage() {
           <div className="kick" style={{ color: 'var(--gold)', fontSize: '12px', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: '8px' }}>
             Exclusive Privileges
           </div>
-          <h2 style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '32px', color: 'var(--gold2)', margin: '0 0 10px' }}>
-            Join The Ethnic Edit Royal Circle
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '32px', color: 'var(--gold2)', margin: '0 0 10px' }}>
+            Join {storeName} Royal Circle
           </h2>
           <p style={{ fontSize: '14px', opacity: 0.8, marginBottom: '24px', lineHeight: 1.5 }}>
             Subscribe to receive private preview access to our seasonal bridal releases, artisan trunk shows, and an instant ₹1,000 welcome voucher.
@@ -1290,7 +1292,7 @@ export default function HomePage() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
               <span className="logo" style={{ width: '32px', height: '32px' }}></span>
-              <strong style={{ fontSize: '18px', color: 'var(--gold2)', fontFamily: '"Cormorant Garamond", serif', letterSpacing: '0.06em' }}>THE ETHNIC EDIT</strong>
+              <strong style={{ fontSize: '18px', color: 'var(--gold2)', fontFamily: 'var(--font-serif)', letterSpacing: '0.06em' }}>{storeName}</strong>
             </div>
             <p style={{ fontSize: '13px', opacity: 0.75, lineHeight: 1.6, margin: '0 0 16px' }}>
               Single-vendor flagship online portal for premium imitation jewellery, handcrafted temple chokers, antique gold kadas, and Basra pearl earrings.
@@ -1347,7 +1349,7 @@ export default function HomePage() {
         {/* Footer Credit Powered By Aminoid */}
         <div style={{ maxWidth: '1440px', margin: '20px auto 0', textAlign: 'center', fontSize: '13px', color: 'var(--cream)', opacity: 0.8 }}>
           <p style={{ margin: 0 }}>
-            © 2026 The Ethnic Edit · Single Vendor Imitation Jewellery Platform ·{' '}
+            © 2026 {storeName} · Single Vendor Imitation Jewellery Platform ·{' '}
             <strong style={{ color: '#fff' }}>Powered by </strong>
             <a
               href="https://www.aminoid.in/"

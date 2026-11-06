@@ -4,6 +4,7 @@ import { Eye, EyeOff, Heart, ShoppingBag, ArrowLeft, ArrowRight, ShieldCheck, Gl
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useStore } from '../context/StoreContext';
 import { productService, categoryService, reviewService, settingsService } from '../services/api';
 import '../EthnicEdit.css';
 
@@ -40,6 +41,7 @@ export default function Landing() {
   const { cartCount, wishlistCount } = useCart();
   const { user, isAuthenticated, login, register, logout } = useAuth();
   const { lang, setLang, t, isTamil, translateCategory } = useLanguage();
+  const { storeSettings, storeName } = useStore();
 
   // Interactive States
   const [isScrolled, setIsScrolled] = useState(false);
@@ -63,24 +65,11 @@ export default function Landing() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastActive, setToastActive] = useState(false);
 
-  // Dynamic Store Settings from Database (Working hours, contact, tagline, story)
-  const [storeSettings, setStoreSettings] = useState({});
-
-  useEffect(() => {
-    settingsService.getSettings()
-      .then((res) => {
-        if (res.success && res.settings) {
-          setStoreSettings(res.settings);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
   // Dynamic Collections from Database
   const [railCollections, setRailCollections] = useState(RAIL_COLLECTIONS);
 
-  // Dynamic Products from Database
-  const [shopProducts, setShopProducts] = useState(INITIAL_SHOP_PRODUCTS);
+  // Dynamic Products strictly from Database (No stale resurrected dummy items)
+  const [shopProducts, setShopProducts] = useState([]);
   const newProducts = (shopProducts.filter((p) => p.is_new).length >= 2
     ? shopProducts.filter((p) => p.is_new)
     : shopProducts
@@ -149,10 +138,10 @@ export default function Landing() {
     }
   };
 
-  useEffect(() => {
+  const loadCategories = useCallback(() => {
     categoryService.getCategories()
       .then((res) => {
-        if (res.success && res.categories && res.categories.length > 0) {
+        if (res.success && Array.isArray(res.categories) && res.categories.length > 0) {
           const mappedCats = res.categories.map((c) => ({
             id: c.slug || c.id.toString(),
             name: c.name,
@@ -166,10 +155,10 @@ export default function Landing() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
+  const loadProducts = useCallback(() => {
     productService.getProducts({ limit: 100 })
       .then((res) => {
-        if (res.success && res.products && res.products.length > 0) {
+        if (res.success && Array.isArray(res.products)) {
           const mapped = res.products.map((p) => ({
             id: p.id,
             name: p.name,
@@ -188,6 +177,19 @@ export default function Landing() {
         console.warn('Backend products fetch notice:', err.message);
       });
   }, []);
+
+  useEffect(() => {
+    loadCategories();
+    loadProducts();
+
+    window.addEventListener('products_updated', loadProducts);
+    window.addEventListener('categories_updated', loadCategories);
+
+    return () => {
+      window.removeEventListener('products_updated', loadProducts);
+      window.removeEventListener('categories_updated', loadCategories);
+    };
+  }, [loadCategories, loadProducts]);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -448,17 +450,17 @@ export default function Landing() {
 
       {/* Header */}
       <header className={`nav ${isScrolled ? 'sc' : ''}`} id="nav">
-        <a className="brand" href="#home" aria-label="The Ethnic Edit home">
+        <a className="brand" href="#home" aria-label={`${storeName} home`}>
           <span className="logo"></span>
           <span>
-            <b>THE ETHNIC EDIT</b>
+            <b>{storeName}</b>
             <small>{storeSettings.tagline || t('heroSubtitle', 'Tradition, Beautifully Curated.')}</small>
           </span>
         </a>
 
         <nav className={`menu ${isMenuOpen ? 'open' : ''}`} id="menu" aria-label="Main">
           <a href="#home" className={activeSection === 'home' ? 'on' : ''} onClick={() => setIsMenuOpen(false)}>
-            {t('home', 'Overview')}
+            {t('home', 'Home')}
           </a>
           <button
             onClick={() => {
@@ -468,15 +470,6 @@ export default function Landing() {
             style={{ background: 'none', border: 'none', color: 'inherit', padding: 0, cursor: 'pointer', font: 'inherit' }}
           >
             {t('collections', 'Collections')}
-          </button>
-          <button
-            onClick={() => {
-              setIsMenuOpen(false);
-              handleProtectedNavigation('#new-products');
-            }}
-            style={{ background: 'none', border: 'none', color: 'inherit', padding: 0, cursor: 'pointer', font: 'inherit', whiteSpace: 'nowrap' }}
-          >
-            {t('newArrivals', 'New Arrivals')}
           </button>
           <button
             onClick={() => {
@@ -492,14 +485,15 @@ export default function Landing() {
               setIsMenuOpen(false);
               handleProtectedNavigation('/orders');
             }}
+            className="nav-orders-link"
             style={{ background: 'none', border: 'none', color: 'inherit', padding: 0, cursor: 'pointer', font: 'inherit', whiteSpace: 'nowrap' }}
           >
             {t('myOrders', 'My Orders')}
           </button>
-          <a href="#about" className={activeSection === 'about' ? 'on' : ''} onClick={() => setIsMenuOpen(false)}>
-            {t('about', 'About Us')}
+          <a href="#about" className={`nav-about-link ${activeSection === 'about' ? 'on' : ''}`} onClick={() => setIsMenuOpen(false)}>
+            {t('about', 'About')}
           </a>
-          <a href="#contact" className={activeSection === 'contact' ? 'on' : ''} onClick={() => setIsMenuOpen(false)}>
+          <a href="#contact" className={`nav-contact-link ${activeSection === 'contact' ? 'on' : ''}`} onClick={() => setIsMenuOpen(false)}>
             {t('contact', 'Contact')}
           </a>
           <button
@@ -549,7 +543,7 @@ export default function Landing() {
                 border: 'none',
                 color: 'var(--cream)',
                 fontSize: '12.5px',
-                width: 'clamp(80px, 12vw, 150px)',
+                width: 'clamp(70px, 10vw, 130px)',
                 outline: 'none',
                 fontFamily: 'var(--font-sans)'
               }}
@@ -629,7 +623,7 @@ export default function Landing() {
           <div className={`slide ${currentSlide === 0 ? 'on' : ''}`}>
             <div className="vis" style={{ backgroundImage: 'var(--i-model)', backgroundPosition: 'left center' }}></div>
             <div className="tx">
-              <div className="kick" style={{ '--k': 0 }}>THE ETHNIC EDIT</div>
+              <div className="kick" style={{ '--k': 0 }}>{storeName}</div>
               <h1 style={{ '--k': 1 }}>
                 {isTamil ? <>பாரம்பரியம்,<br /><em>அழகாக</em> செதுக்கப்பட்டது.</> : <>Tradition,<br /><em>Beautifully</em> Curated.</>}
               </h1>
@@ -1104,7 +1098,7 @@ export default function Landing() {
             <a className="brand" href="#home" style={{ marginBottom: '16px' }}>
               <span className="logo"></span>
               <span>
-                <b>THE ETHNIC EDIT</b>
+                <b>{storeName}</b>
               </span>
             </a>
             <p>{t('footerDesc', 'Timeless jewellery for every celebration, crafted with elegance.')}</p>
@@ -1160,7 +1154,7 @@ export default function Landing() {
 
         {/* Footer Bottom with Powered by Aminoid */}
         <div className="fb">
-          <span>© {new Date().getFullYear()} The Ethnic Edit. {t('allRightsReserved', 'All rights reserved.')}</span>
+          <span>© {new Date().getFullYear()} {storeName}. {t('allRightsReserved', 'All rights reserved.')}</span>
           <span>
             Powered by{' '}
             <a

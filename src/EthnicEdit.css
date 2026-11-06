@@ -162,3 +162,76 @@ footer li a{display:inline-block;padding:5px 0}#dots button{position:relative}#d
   .menu a,.menu button{padding:14px 2px;font-size:17px;border-bottom:1px solid var(--line);width:100%;justify-content:flex-start}
   #burger{display:grid}
 }
+
+/* ===== NAVIGATION OVERFLOW FIX ===== */
+/* Hide About/Contact from desktop nav on medium screens — still in hamburger */
+@media (max-width: 1100px) {
+  .nav-about-link, .nav-contact-link { display: none !important; }
+}
+@media (max-width: 900px) {
+  .nav-orders-link { display: none !important; }
+}
+/* Ensure menu items don't overflow on any screen */
+.menu { overflow: hidden; flex-wrap: nowrap; }
+.menu a, .menu button { font-size: clamp(11px, 0.85vw, 13px); padding: 6px 1px; gap: clamp(6px,0.8vw,14px); }
+/* On mobile, restore full display of all items in hamburger */
+@media (max-width: 768px) {
+  .nav-about-link, .nav-contact-link, .nav-orders-link { display: flex !important; }
+  .menu a, .menu button { font-size: 17px; padding: 14px 2px; }
+}
+
+/* ===== ADMIN PANEL FONTS ===== */
+.admin-layout, .admin-layout * {
+  font-family: var(--font-sans) !important;
+}
+.admin-layout h1, .admin-layout h2, .admin-layout h3,
+.admin-layout h4, .admin-layout h5, .admin-layout h6 {
+  font-family: var(--font-serif) !important;
+}
+
+/* ===== 4-COLUMN CATALOGUE GRID & CARD STYLES ===== */
+@media (max-width: 1400px) {
+  .catalogue-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 900px) {
+  .catalogue-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 500px) {
+  .catalogue-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ===== FIX FOR BUTTON MISALIGNMENT & CARD BORDER BOX ===== */
+.pc {
+  box-sizing: border-box !important;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(160deg, rgba(39,5,30,0.7), rgba(23,2,19,0.9));
+}
+.pc .row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-top: 10px !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+}
+.pc .add {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 12px !important;
+  padding: 8px 14px !important;
+}
+.pc .im {
+  aspect-ratio: 1 / 1 !important;
+  max-height: 220px !important;
+}

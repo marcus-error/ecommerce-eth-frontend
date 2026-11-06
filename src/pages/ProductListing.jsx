@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { productService, categoryService } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useStore } from '../context/StoreContext';
 import ProductDetailModal from '../components/ProductDetailModal';
 import {
   Search,
@@ -286,9 +287,10 @@ export default function ProductListing() {
   const location = useLocation();
   const params = useParams();
 
-  // Core Data
-  const [products, setProducts] = useState(CATALOGUE_PRODUCTS);
+  // Core Data - strictly from Live Database
+  const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(IMITATION_CATEGORIES);
+  const { storeSettings, storeName } = useStore();
 
   // Filters State
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -337,50 +339,57 @@ export default function ProductListing() {
   }, [location.search, params.categorySlug]);
 
   // Load from backend dynamically
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [prodRes, catRes] = await Promise.allSettled([
-          productService.getProducts(),
-          categoryService.getCategories()
-        ]);
+  const loadData = useCallback(async () => {
+    try {
+      const [prodRes, catRes] = await Promise.allSettled([
+        productService.getProducts(),
+        categoryService.getCategories()
+      ]);
 
-        if (prodRes.status === 'fulfilled' && prodRes.value?.success && Array.isArray(prodRes.value.products)) {
-          const dbProducts = prodRes.value.products.map((p) => ({
-            ...p,
-            selling_price: parseFloat(p.selling_price || p.price || 0),
-            original_price: parseFloat(p.original_price || (p.selling_price || 0) * 1.15),
-            image_url: p.images?.[0]?.image_url || p.image_url || 'var(--i-neck)',
-            jewellery_type: p.jewellery_type || p.collection_type || 'Temple Jewellery',
-            material: p.material || '24k Antique Gold Plated',
-            colour: p.colour || 'Antique Gold',
-            occasion: p.occasion || 'Bridal & Festive',
-            in_stock: p.stock > 0,
-            popularity: p.popularity || p.reviews_count || 90,
-            rating: parseFloat(p.rating || 4.8),
-            reviews_count: p.reviews_count || 65
-          }));
-          setProducts(dbProducts);
-        }
-
-        if (catRes.status === 'fulfilled' && catRes.value?.success && Array.isArray(catRes.value.categories)) {
-          // LIVE DATABASE CATEGORIES ARE THE STRICT SOURCE OF TRUTH
-          // Whatever is deleted in admin is deleted here immediately.
-          const dbCats = catRes.value.categories.map((c) => ({
-            id: c.slug || c.id.toString(),
-            name: c.name,
-            slug: c.slug || c.id.toString(),
-            img: c.image_url || 'var(--i-neck)',
-            tag: 'Collection'
-          }));
-          setCategories(dbCats);
-        }
-      } catch (e) {
-        console.warn('API fetch notice:', e.message);
+      if (prodRes.status === 'fulfilled' && prodRes.value?.success && Array.isArray(prodRes.value.products)) {
+        const dbProducts = prodRes.value.products.map((p) => ({
+          ...p,
+          selling_price: parseFloat(p.selling_price || p.price || 0),
+          original_price: parseFloat(p.original_price || (p.selling_price || 0) * 1.15),
+          image_url: p.images?.[0]?.image_url || p.image_url || 'var(--i-neck)',
+          jewellery_type: p.jewellery_type || p.collection_type || 'Temple Jewellery',
+          material: p.material || '24k Antique Gold Plated',
+          colour: p.colour || 'Antique Gold',
+          occasion: p.occasion || 'Bridal & Festive',
+          in_stock: p.stock > 0,
+          popularity: p.popularity || p.reviews_count || 90,
+          rating: parseFloat(p.rating || 4.8),
+          reviews_count: p.reviews_count || 65
+        }));
+        setProducts(dbProducts);
       }
-    };
-    loadData();
+
+      if (catRes.status === 'fulfilled' && catRes.value?.success && Array.isArray(catRes.value.categories) && catRes.value.categories.length > 0) {
+        const dbCats = catRes.value.categories.map((c) => ({
+          id: c.slug || c.id.toString(),
+          name: c.name,
+          slug: c.slug || c.id.toString(),
+          img: c.image_url || 'var(--i-neck)',
+          tag: 'Collection'
+        }));
+        setCategories(dbCats);
+      }
+    } catch (e) {
+      console.warn('API fetch notice:', e.message);
+    }
   }, []);
+
+  useEffect(() => {
+    loadData();
+
+    window.addEventListener('products_updated', loadData);
+    window.addEventListener('categories_updated', loadData);
+
+    return () => {
+      window.removeEventListener('products_updated', loadData);
+      window.removeEventListener('categories_updated', loadData);
+    };
+  }, [loadData]);
 
   // Strict Navigation Rule: Redirect unauthenticated customers
   const handleProtectedAction = (product, action = 'view') => {
@@ -613,11 +622,11 @@ export default function ProductListing() {
 
       {/* Header */}
       <header className="nav sc" style={{ position: 'sticky', top: 0, zIndex: 100 }}>
-        <Link className="brand" to="/">
+        <Link className="brand" to="/" aria-label={`${storeName} home`}>
           <span className="logo"></span>
           <span>
-            <b>THE ETHNIC EDIT</b>
-            <small>{t('heroSubtitle', 'Tradition, Beautifully Curated.')}</small>
+            <b>{storeName}</b>
+            <small>{storeSettings.tagline || t('heroSubtitle', 'Tradition, Beautifully Curated.')}</small>
           </span>
         </Link>
         <nav className="menu open" style={{ display: 'flex', alignItems: 'center' }}>
@@ -656,7 +665,7 @@ export default function ProductListing() {
         {/* Breadcrumb & Title */}
         <div style={{ marginBottom: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', opacity: 0.7, marginBottom: '8px' }}>
-            <button onClick={() => navigate(-1)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(255,240,208,0.08)', border: '1px solid var(--line)', color: 'var(--gold2)', padding: '4px 12px', borderRadius: '999px', fontSize: '12px', cursor: 'pointer', marginRight: '8px' }}><ArrowLeft size={13} /> {t('adminBack', 'Back')}</button><Link to="/" style={{ color: 'var(--gold)', textDecoration: 'none' }}>{t('home', 'Home')}</Link>
+            <button onClick={() => navigate('/')} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(255,240,208,0.08)', border: '1px solid var(--line)', color: 'var(--gold2)', padding: '4px 12px', borderRadius: '999px', fontSize: '12px', cursor: 'pointer', marginRight: '8px' }}><ArrowLeft size={13} /> {t('adminBack', 'Back')}</button><Link to="/" style={{ color: 'var(--gold)', textDecoration: 'none' }}>{t('home', 'Home')}</Link>
             <span>/</span>
             <Link to="/shop" style={{ color: 'var(--gold)', textDecoration: 'none' }}>{t('catalogue', 'Catalogue')}</Link>
             <span>/</span>
@@ -1077,8 +1086,16 @@ export default function ProductListing() {
                 </button>
               </div>
             ) : viewMode === 'grid' ? (
-              /* GRID VIEW */
-              <div className="grid" style={{ minHeight: '300px' }}>
+              /* GRID VIEW: 4 CARDS PER ROW, CONTAINED BORDER-BOX IMAGES, ALIGNED BUTTONS */
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+                  gap: '16px',
+                  minHeight: '300px'
+                }}
+                className="catalogue-grid"
+              >
                 {sorted.map((p) => {
                   const img = p.image_url || p.images?.[0]?.image_url;
                   const isCss = img && img.startsWith('var(');
@@ -1090,10 +1107,31 @@ export default function ProductListing() {
 
                   return (
                     <article
-                      className="pc in"
                       key={p.id}
-                      style={{ cursor: 'pointer', position: 'relative' }}
                       onClick={() => handleProtectedAction(p, 'view')}
+                      style={{
+                        boxSizing: 'border-box',
+                        background: 'linear-gradient(160deg, #27051e, #170213)',
+                        border: '1px solid var(--line)',
+                        borderRadius: '16px',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.borderColor = 'var(--gold)';
+                        e.currentTarget.style.boxShadow = '0 12px 28px rgba(0,0,0,0.5)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'none';
+                        e.currentTarget.style.borderColor = 'var(--line)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
                     >
                       {/* Heart Wishlist Button */}
                       <button
@@ -1103,14 +1141,14 @@ export default function ProductListing() {
                         }}
                         style={{
                           position: 'absolute',
-                          top: '12px',
-                          right: '12px',
+                          top: '10px',
+                          right: '10px',
                           zIndex: 2,
-                          background: 'rgba(20,2,16,0.65)',
+                          background: 'rgba(20,2,16,0.75)',
                           border: '1px solid var(--line)',
                           borderRadius: '50%',
-                          width: '34px',
-                          height: '34px',
+                          width: '32px',
+                          height: '32px',
                           display: 'grid',
                           placeItems: 'center',
                           cursor: 'pointer',
@@ -1118,7 +1156,7 @@ export default function ProductListing() {
                         }}
                         title={wishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
                       >
-                        <Heart size={16} fill={wishlisted ? '#f87171' : 'none'} />
+                        <Heart size={15} fill={wishlisted ? '#f87171' : 'none'} />
                       </button>
 
                       {/* Badge if available */}
@@ -1126,12 +1164,12 @@ export default function ProductListing() {
                         <div
                           style={{
                             position: 'absolute',
-                            top: '12px',
-                            left: '12px',
+                            top: '10px',
+                            left: '10px',
                             zIndex: 2,
                             background: 'rgba(212,175,55,0.92)',
                             color: '#12020e',
-                            fontSize: '10px',
+                            fontSize: '9.5px',
                             fontWeight: 700,
                             padding: '3px 8px',
                             borderRadius: '999px',
@@ -1142,57 +1180,132 @@ export default function ProductListing() {
                         </div>
                       )}
 
-                      <div className="wr">
+                      {/* Contained Image Box */}
+                      <div
+                        style={{
+                          width: '100%',
+                          height: '190px',
+                          overflow: 'hidden',
+                          backgroundColor: '#24061d',
+                          position: 'relative'
+                        }}
+                      >
                         <div
-                          className="im"
-                          style={{ backgroundImage: bg, backgroundColor: '#24061d', backgroundPosition: 'center' }}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            backgroundImage: bg,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            transition: 'transform 0.5s ease'
+                          }}
                           role="img"
                           aria-label={p.name}
                         />
                       </div>
-                      <div className="in">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <small style={{ color: 'var(--gold)' }}>{p.category?.name || 'Imitation'}</small>
-                          <span style={{ fontSize: '10px', opacity: 0.6 }}>{p.material?.split(' ')[0] || 'Brass'}</span>
-                        </div>
-                        <h3>{p.name}</h3>
 
-                        {/* Rating row */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--gold)', margin: '4px 0 8px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', background: 'rgba(34,197,94,0.15)', padding: '2px 6px', borderRadius: '4px', color: '#4ade80', fontWeight: 600 }}>
-                            <span>{p.rating || 4.9}</span>
-                            <Star size={11} fill="#4ade80" />
+                      {/* Card Content with border box padding */}
+                      <div
+                        style={{
+                          padding: '12px 14px 14px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          flex: 1,
+                          justifyContent: 'space-between',
+                          boxSizing: 'border-box'
+                        }}
+                      >
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                            <span style={{ fontSize: '10.5px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700 }}>
+                              {p.category?.name || 'Imitation'}
+                            </span>
+                            <span style={{ fontSize: '10px', opacity: 0.6, color: 'var(--cream)' }}>
+                              {p.material?.split(' ')[0] || 'Brass'}
+                            </span>
                           </div>
-                          <span style={{ opacity: 0.6 }}>({p.reviews_count || 50}+ ratings)</span>
+
+                          <h3
+                            style={{
+                              fontFamily: 'var(--font-serif)',
+                              fontWeight: 500,
+                              fontSize: '15px',
+                              lineHeight: 1.3,
+                              color: 'var(--cream)',
+                              margin: '0 0 6px',
+                              minHeight: '38px',
+                              overflow: 'hidden',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical'
+                            }}
+                          >
+                            {p.name}
+                          </h3>
+
+                          {/* Rating row */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--gold)', marginBottom: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '2px', background: 'rgba(34,197,94,0.15)', padding: '2px 5px', borderRadius: '4px', color: '#4ade80', fontWeight: 600 }}>
+                              <span>{p.rating || 4.9}</span>
+                              <Star size={10} fill="#4ade80" />
+                            </div>
+                            <span style={{ opacity: 0.6 }}>({p.reviews_count || 50}+)</span>
+                          </div>
                         </div>
 
-                        {/* Price & Add button */}
-                        <div className="row">
-                          <div>
-                            <span className="pr">{inr(price)}</span>
+                        <div>
+                          {/* Price Row */}
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '10px' }}>
+                            <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--gold2)' }}>
+                              {inr(price)}
+                            </span>
                             {originalPrice > price && (
-                              <span style={{ fontSize: '12px', textDecoration: 'line-through', opacity: 0.5, marginLeft: '6px' }}>
+                              <span style={{ fontSize: '11px', textDecoration: 'line-through', opacity: 0.5 }}>
                                 {inr(originalPrice)}
                               </span>
                             )}
+                            {discountPct > 0 && (
+                              <span style={{ fontSize: '10.5px', color: '#4ade80', fontWeight: 600, marginLeft: 'auto' }}>
+                                Save {discountPct}%
+                              </span>
+                            )}
                           </div>
+
+                          {/* Full-width, Aligned Add to Bag Button (BUG-001 Fixed) */}
                           <button
-                            className="add"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleProtectedAction(p, 'cart');
                             }}
+                            style={{
+                              width: '100%',
+                              padding: '9px 12px',
+                              borderRadius: '999px',
+                              background: 'rgba(212,175,55,0.12)',
+                              border: '1px solid var(--gold)',
+                              color: 'var(--gold2)',
+                              fontWeight: 600,
+                              fontSize: '12px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px',
+                              transition: 'all 0.25s ease',
+                              whiteSpace: 'nowrap'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'var(--gold)';
+                              e.currentTarget.style.color = '#12020e';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'rgba(212,175,55,0.12)';
+                              e.currentTarget.style.color = 'var(--gold2)';
+                            }}
                           >
-                            Add to bag
+                            <ShoppingBag size={13} />
+                            <span>Add to Bag</span>
                           </button>
-                        </div>
-
-                        {/* Footer tags */}
-                        <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(212,175,55,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
-                          <span style={{ color: 'var(--gold2)', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                            <Eye size={12} /> View Details →
-                          </span>
-                          {discountPct > 0 && <span style={{ color: '#4ade80', fontWeight: 600 }}>Save {discountPct}%</span>}
                         </div>
                       </div>
                     </article>
@@ -1363,7 +1476,7 @@ export default function ProductListing() {
       {/* Footer with Powered by Aminoid */}
       <footer style={{ marginTop: 'auto', borderTop: '1px solid var(--line)', padding: '24px', background: 'var(--panel)', fontSize: '13px' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <span>© {new Date().getFullYear()} The Ethnic Edit · Luxury Imitation Jewellery.</span>
+          <span>© {new Date().getFullYear()} {storeName} · Luxury Imitation Jewellery.</span>
           <span>
             Powered by{' '}
             <a href="https://www.aminoid.in/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold2)', textDecoration: 'underline', fontWeight: 500 }}>

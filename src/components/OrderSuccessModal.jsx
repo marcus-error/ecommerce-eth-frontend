@@ -1,8 +1,10 @@
 import React from 'react';
+import { useStore } from '../context/StoreContext';
 
 const inr = (n) => '₹' + Number(n).toLocaleString('en-IN');
 
 export default function OrderSuccessModal({ order, onClose, onTrackOrder }) {
+  const { storeName } = useStore();
   if (!order) return null;
 
   return (
@@ -33,7 +35,7 @@ export default function OrderSuccessModal({ order, onClose, onTrackOrder }) {
           Order Confirmed!
         </h3>
         <p style={{ color: 'var(--cream)', opacity: 0.9, fontSize: '15px', marginBottom: '20px' }}>
-          Thank you for choosing <b>The Ethnic Edit</b>. Your heirloom jewellery is being prepared with utmost care.
+          Thank you for choosing <b>{storeName}</b>. Your heirloom jewellery is being prepared with utmost care.
         </p>
 
         <div style={{ background: 'rgba(255,240,208,0.05)', border: '1px solid var(--line)', borderRadius: '12px', padding: '16px', textAlign: 'left', marginBottom: '24px' }}>

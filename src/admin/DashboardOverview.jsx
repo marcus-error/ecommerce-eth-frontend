@@ -12,7 +12,8 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  Legend
 } from 'recharts';
 
 const inr = (n) => '₹' + Number(n).toLocaleString('en-IN');
@@ -179,27 +180,59 @@ export default function DashboardOverview({ onNavigate, onBack }) {
             🏷️ Products by Collection
           </h3>
           <div style={{ width: '100%', height: '240px', display: 'flex', alignItems: 'center' }}>
-            {category_distribution.length > 0 ? (
-              <ResponsiveContainer>
+            {category_distribution.filter((c) => Number(c.value) > 0).length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={category_distribution}
+                    data={category_distribution.filter((c) => Number(c.value) > 0)}
                     dataKey="value"
                     nameKey="name"
-                    cx="50%"
+                    cx="38%"
                     cy="50%"
-                    outerRadius={80}
-                    label={({ name, value }) => `${name} (${value})`}
+                    innerRadius={40}
+                    outerRadius={75}
+                    paddingAngle={3}
                   >
-                    {category_distribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
+                    {category_distribution
+                      .filter((c) => Number(c.value) > 0)
+                      .map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: '#24061d', borderColor: '#d4af37', color: '#fff' }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#1c0418',
+                      borderColor: '#d4af37',
+                      color: '#fff',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                    }}
+                    formatter={(value, name) => [`${value} piece${value > 1 ? 's' : ''}`, name]}
+                  />
+                  <Legend
+                    layout="vertical"
+                    align="right"
+                    verticalAlign="middle"
+                    wrapperStyle={{
+                      fontSize: '11px',
+                      lineHeight: '20px',
+                      maxHeight: '190px',
+                      overflowY: 'auto',
+                      paddingLeft: '10px'
+                    }}
+                    formatter={(value, entry) => (
+                      <span style={{ color: 'var(--cream)', opacity: 0.9 }}>
+                        {value} ({entry.payload?.value || 0})
+                      </span>
+                    )}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div style={{ width: '100%', textAlign: 'center', opacity: 0.6 }}>No category data</div>
+              <div style={{ width: '100%', textAlign: 'center', opacity: 0.6, color: 'var(--cream)', fontSize: '13px' }}>
+                No active collection pieces yet
+              </div>
             )}
           </div>
         </div>

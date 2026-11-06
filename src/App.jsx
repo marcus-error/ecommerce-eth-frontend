@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { StoreProvider } from './context/StoreContext';
 import Landing from './pages/Landing';
 import HomePage from './pages/HomePage';
 import ProductListing from './pages/ProductListing';
@@ -23,10 +24,11 @@ import AdminLayout from './admin/AdminLayout';
 export default function App() {
   return (
     <BrowserRouter>
-      <LanguageProvider>
-        <AuthProvider>
-          <CartProvider>
-            <Routes>
+      <StoreProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <CartProvider>
+              <Routes>
               {/* Brand Landing Page with Collections & Shop The Edit */}
               <Route path="/" element={<Landing />} />
 
@@ -71,6 +73,7 @@ export default function App() {
           </CartProvider>
         </AuthProvider>
       </LanguageProvider>
-    </BrowserRouter>
+    </StoreProvider>
+  </BrowserRouter>
   );
 }

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
+import { useStore } from '../context/StoreContext';
 import { authService } from '../services/api';
 import { 
   ArrowLeft, User, Mail, Phone, MapPin, Lock, Globe, Check, Eye, EyeOff, ShieldCheck, LogOut 
@@ -13,6 +14,7 @@ export default function UserSettings() {
   const { user, isAuthenticated, updateUser, logout } = useAuth();
   const { lang, setLang, t, isTamil } = useLanguage();
   const { cartCount } = useCart();
+  const { storeSettings, storeName } = useStore();
   const navigate = useNavigate();
 
   // Profile Form State
@@ -125,11 +127,11 @@ export default function UserSettings() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg)', color: 'var(--cream)' }}>
       {/* Navbar */}
       <header className="nav sc" style={{ position: 'sticky', top: 0, zIndex: 100 }}>
-        <Link className="brand" to="/">
+        <Link className="brand" to="/" aria-label={`${storeName} home`}>
           <span className="logo"></span>
           <span>
-            <b>THE ETHNIC EDIT</b>
-            <small>{t('heroSubtitle', 'Tradition, Beautifully Curated.')}</small>
+            <b>{storeName}</b>
+            <small>{storeSettings.tagline || t('heroSubtitle', 'Tradition, Beautifully Curated.')}</small>
           </span>
         </Link>
         <nav className="menu open" style={{ display: 'flex' }}>

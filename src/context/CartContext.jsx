@@ -266,7 +266,8 @@ export const CartProvider = ({ children }) => {
       }
       return { success: false, message: res.message || 'Invalid coupon' };
     } catch (err) {
-      return { success: false, message: err.message || 'Failed to apply coupon' };
+      const msg = err.response?.data?.message || err.message || 'Failed to apply coupon';
+      return { success: false, message: msg };
     }
   };
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useStore } from '../context/StoreContext';
 import { Heart, ShoppingBag, Trash2, ArrowLeft, ArrowRight } from 'lucide-react';
 import '../EthnicEdit.css';
 
@@ -8,17 +9,18 @@ const inr = (n) => '₹' + Number(n).toLocaleString('en-IN');
 
 export default function Wishlist() {
   const { wishlistItems, toggleWishlist, addToCart, cartCount } = useCart();
+  const { storeSettings, storeName } = useStore();
   const navigate = useNavigate();
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg)', color: 'var(--cream)' }}>
       {/* Header */}
       <header className="nav sc" style={{ position: 'sticky', top: 0, zIndex: 100 }}>
-        <Link className="brand" to="/">
+        <Link className="brand" to="/" aria-label={`${storeName} home`}>
           <span className="logo"></span>
           <span>
-            <b>THE ETHNIC EDIT</b>
-            <small>Tradition, Beautifully Curated.</small>
+            <b>{storeName}</b>
+            <small>{storeSettings.tagline || 'Tradition, Beautifully Curated.'}</small>
           </span>
         </Link>
         <nav className="menu open" style={{ display: 'flex' }}>
@@ -164,7 +166,7 @@ export default function Wishlist() {
       {/* Footer */}
       <footer style={{ marginTop: 'auto', borderTop: '1px solid var(--line)', padding: '24px', background: 'var(--panel)', fontSize: '13px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <span>© {new Date().getFullYear()} The Ethnic Edit. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} {storeName}. All rights reserved.</span>
           <span>
             Powered by{' '}
             <a href="https://www.aminoid.in/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold2)', textDecoration: 'underline', fontWeight: 500 }}>

@@ -3,11 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Star, CheckCircle2, ShieldCheck, MessageSquare, Sparkles, Send, Upload, Image, X } from 'lucide-react';
 import { reviewService } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
+import { useStore } from '../context/StoreContext';
 import '../EthnicEdit.css';
 
 export default function Feedback() {
   const navigate = useNavigate();
   const { t, isTamil } = useLanguage();
+  const { storeSettings, storeName } = useStore();
 
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
@@ -132,11 +134,11 @@ export default function Feedback() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'radial-gradient(ellipse at 50% 0%, rgba(111,31,78,0.45), transparent 60%), #12020e', color: 'var(--cream)' }}>
       {/* Navbar */}
       <header className="nav sc" style={{ position: 'sticky', top: 0, zIndex: 100 }}>
-        <Link className="brand" to="/">
+        <Link className="brand" to="/" aria-label={`${storeName} home`}>
           <span className="logo"></span>
           <span>
-            <b>THE ETHNIC EDIT</b>
-            <small>{t('heroSubtitle', 'Tradition, Beautifully Curated.')}</small>
+            <b>{storeName}</b>
+            <small>{storeSettings.tagline || t('heroSubtitle', 'Tradition, Beautifully Curated.')}</small>
           </span>
         </Link>
         <nav className="menu open" style={{ display: 'flex' }}>
@@ -554,7 +556,7 @@ export default function Feedback() {
       {/* Footer */}
       <footer style={{ borderTop: '1px solid var(--line)', padding: '28px 20px', textAlign: 'center', fontSize: '13px', opacity: 0.7, marginTop: '40px' }}>
         <p style={{ margin: '0 0 8px' }}>
-          © {new Date().getFullYear()} The Ethnic Edit. All rights reserved.
+          © {new Date().getFullYear()} {storeName}. All rights reserved.
         </p>
         <Link to="/" style={{ color: 'var(--gold2)', textDecoration: 'underline' }}>
           Return to Storefront Home

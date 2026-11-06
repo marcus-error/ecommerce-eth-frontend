@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useStore } from '../context/StoreContext';
 import { couponService } from '../services/api';
 import { Trash2, ArrowRight, ArrowLeft, Tag, ShoppingBag, ShieldCheck, Globe, Settings } from 'lucide-react';
 import '../EthnicEdit.css';
@@ -10,9 +11,10 @@ import '../EthnicEdit.css';
 const inr = (n) => '₹' + Number(n).toLocaleString('en-IN');
 
 export default function Cart() {
-  const { cartItems, cartSubtotal, updateQuantity, clearCart } = useCart();
+  const { cartItems, cartSubtotal, updateQuantity, clearCart, applyCouponCode } = useCart();
   const { isAuthenticated } = useAuth();
   const { lang, setLang, t, isTamil } = useLanguage();
+  const { storeSettings, storeName } = useStore();
   const navigate = useNavigate();
 
   const [couponCode, setCouponCode] = useState('');
@@ -27,32 +29,16 @@ export default function Cart() {
     if (!code) return;
 
     try {
-      const res = await couponService.validateCoupon(code, cartSubtotal);
-      if (res.success && res.discount_amount) {
-        setCouponDiscount(res.discount_amount);
+      const res = await applyCouponCode(code);
+      if (res.success) {
+        setCouponDiscount(res.discount || 0);
         setAppliedCoupon(code);
+        setCouponError('');
       } else {
-        // Fallback demo coupon
-        if (code === 'WELCOME10') {
-          const discount = Math.round(cartSubtotal * 0.1);
-          setCouponDiscount(discount);
-          setAppliedCoupon(code);
-        } else if (code === 'ETHNIC20') {
-          const discount = Math.round(cartSubtotal * 0.2);
-          setCouponDiscount(discount);
-          setAppliedCoupon(code);
-        } else {
-          setCouponError('Invalid or expired coupon code.');
-        }
+        setCouponError(res.message || 'Invalid or expired coupon code.');
       }
     } catch (err) {
-      if (code === 'WELCOME10') {
-        const discount = Math.round(cartSubtotal * 0.1);
-        setCouponDiscount(discount);
-        setAppliedCoupon(code);
-      } else {
-        setCouponError('Coupon code could not be verified.');
-      }
+      setCouponError(err.response?.data?.message || err.message || 'Coupon code could not be verified.');
     }
   };
 
@@ -62,11 +48,11 @@ export default function Cart() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg)', color: 'var(--cream)' }}>
       {/* Header */}
       <header className="nav sc" style={{ position: 'sticky', top: 0, zIndex: 100 }}>
-        <Link className="brand" to="/">
+        <Link className="brand" to="/" aria-label={`${storeName} home`}>
           <span className="logo"></span>
           <span>
-            <b>THE ETHNIC EDIT</b>
-            <small>{t('heroSubtitle', 'Tradition, Beautifully Curated.')}</small>
+            <b>{storeName}</b>
+            <small>{storeSettings.tagline || t('heroSubtitle', 'Tradition, Beautifully Curated.')}</small>
           </span>
         </Link>
         <nav className="menu open" style={{ display: 'flex', alignItems: 'center' }}>
@@ -256,7 +242,7 @@ export default function Cart() {
       {/* Footer */}
       <footer style={{ marginTop: 'auto', borderTop: '1px solid var(--line)', padding: '24px', background: 'var(--panel)', fontSize: '13px' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <span>© {new Date().getFullYear()} The Ethnic Edit. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} {storeName}. All rights reserved.</span>
           <span>
             Powered by{' '}
             <a href="https://www.aminoid.in/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold2)', textDecoration: 'underline', fontWeight: 500 }}>

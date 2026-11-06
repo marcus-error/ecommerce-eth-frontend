@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff, ShieldCheck, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useStore } from '../context/StoreContext';
 import '../EthnicEdit.css';
 
 export default function Register() {
@@ -19,6 +20,7 @@ export default function Register() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
+  const { storeName } = useStore();
   const navigate = useNavigate();
 
   const getPasswordStrength = (pass) => {
@@ -76,7 +78,7 @@ export default function Register() {
       });
 
       if (res.success) {
-        setSuccess('Registration successful! Redirecting to The Ethnic Edit store...');
+        setSuccess(`Registration successful! Redirecting to ${storeName} store...`);
         setTimeout(() => {
           navigate('/');
         }, 1200);
@@ -144,8 +146,8 @@ export default function Register() {
           <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg, #f6dda0, #d4af37)', margin: '0 auto 16px', display: 'grid', placeItems: 'center', color: '#1a0418', fontSize: '24px', fontWeight: 'bold' }}>
             ✦
           </div>
-          <h2 style={{ fontSize: '26px', fontFamily: '"Cormorant Garamond", serif', color: 'var(--gold2)', letterSpacing: '0.06em', margin: 0 }}>
-            THE ETHNIC EDIT
+          <h2 style={{ fontSize: '26px', fontFamily: 'var(--font-serif)', color: 'var(--gold2)', letterSpacing: '0.06em', margin: 0 }}>
+            {storeName}
           </h2>
           <span style={{ fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--gold)', opacity: 0.8, display: 'block', marginTop: '4px', marginBottom: '24px' }}>
             Create Patron Account · Imitation Jewellery

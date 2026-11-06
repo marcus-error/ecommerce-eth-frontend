@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useStore } from '../context/StoreContext';
 import DashboardOverview from './DashboardOverview';
 import ProductManagement from './ProductManagement';
 import CategoryManagement from './CategoryManagement';
@@ -16,6 +17,7 @@ import SettingsManagement from './SettingsManagement';
 export default function AdminLayout() {
   const { user, isAdmin, loading, logout } = useAuth();
   const { lang, setLang, t, isTamil } = useLanguage();
+  const { storeName } = useStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('overview');
@@ -60,7 +62,7 @@ export default function AdminLayout() {
     { id: 'inventory', label: t('adminInventory', 'Inventory & Stock'), icon: '📋' },
     { id: 'customers', label: t('adminCustomers', 'Customers'), icon: '👥' },
     { id: 'coupons', label: t('adminCoupons', 'Coupons & Offers'), icon: '🏷️' },
-    { id: 'settings', label: t('adminStoreSettings', 'Store Settings'), icon: '⚙️' }
+    { id: 'settings', label: t('adminSettings', 'Settings'), icon: '⚙️' }
   ];
 
   useEffect(() => {
@@ -113,7 +115,7 @@ export default function AdminLayout() {
           </div>
           <div>
             <b style={{ fontFamily: 'var(--font-serif)', fontSize: '18px', color: 'var(--gold2)', letterSpacing: '0.08em', display: 'block' }}>
-              THE ETHNIC EDIT
+              {storeName}
             </b>
             <small style={{ color: 'var(--gold)', opacity: 0.75, fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
               {t('adminConsole', 'Management Console')}

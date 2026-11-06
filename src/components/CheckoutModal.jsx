@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useStore } from '../context/StoreContext';
 import { orderService, paymentService } from '../services/api';
 
 const inr = (n) => '₹' + Number(n).toLocaleString('en-IN');
@@ -8,6 +9,7 @@ const inr = (n) => '₹' + Number(n).toLocaleString('en-IN');
 export default function CheckoutModal({ isOpen, onClose, onOrderSuccess }) {
   const { cartItems, cartSubtotal, discount, cartTotal, appliedCoupon, applyCouponCode, removeCoupon, clearCart } = useCart();
   const { user } = useAuth();
+  const { storeName } = useStore();
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -93,7 +95,7 @@ export default function CheckoutModal({ isOpen, onClose, onOrderSuccess }) {
               key: payRes.keyId || 'rzp_test_TwS8lhHECXyOSI',
               amount: payRes.order.amount,
               currency: payRes.order.currency || 'INR',
-              name: 'The Ethnic Edit',
+              name: storeName,
               description: `Heritage Order #${createdOrder.order_number}`,
               order_id: payRes.order.id,
               prefill: {

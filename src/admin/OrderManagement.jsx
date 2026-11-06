@@ -16,10 +16,12 @@ export default function OrderManagement({ onBack }) {
   const [editPaymentStatus, setEditPaymentStatus] = useState('');
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
+  const [toastType, setToastType] = useState('success');
 
-  const showToast = (msg) => {
+  const showToast = (msg, type = 'success') => {
     setToast(msg);
-    setTimeout(() => setToast(''), 3000);
+    setToastType(type);
+    setTimeout(() => setToast(''), 3500);
   };
 
   const loadOrders = async () => {
@@ -61,7 +63,7 @@ export default function OrderManagement({ onBack }) {
         setOrders((prev) => prev.map((o) => (o.id === res.order.id ? res.order : o)));
       }
     } catch (err) {
-      alert(err.message || 'Failed to update order.');
+      showToast(err.response?.data?.message || err.message || 'Failed to update order.', 'error');
     } finally {
       setSaving(false);
     }
@@ -70,8 +72,8 @@ export default function OrderManagement({ onBack }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {toast && (
-        <div style={{ position: 'fixed', top: '84px', right: '28px', background: 'linear-gradient(135deg, #f6dda0, #d4af37)', color: '#1a0418', padding: '12px 22px', borderRadius: '999px', fontWeight: 600, fontSize: '14px', zIndex: 9999 }}>
-          ✓ {toast}
+        <div style={{ position: 'fixed', top: '84px', right: '28px', background: toastType === 'error' ? 'rgba(239,68,68,0.95)' : 'linear-gradient(135deg, #f6dda0, #d4af37)', color: toastType === 'error' ? '#fff' : '#1a0418', padding: '12px 22px', borderRadius: '999px', fontWeight: 600, fontSize: '14px', zIndex: 9999, border: toastType === 'error' ? '1px solid #fca5a5' : 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
+          {toastType === 'error' ? '⚠ ' : '✓ '} {toast}
         </div>
       )}
 

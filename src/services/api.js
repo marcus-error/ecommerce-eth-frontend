@@ -90,9 +90,10 @@ export const orderService = {
 // 5. Coupon Services
 export const couponService = {
   validateCoupon: (code, subtotal) => api.post('/coupons/validate', { code, subtotal }),
-  applyCoupon: (data) => api.post('/coupons/validate', data),
+  applyCoupon: (data) => api.post('/coupons/apply', data),
   adminGetCoupons: () => api.get('/coupons/admin'),
   createCoupon: (data) => api.post('/coupons/admin', data),
+  toggleCoupon: (id) => api.patch(`/coupons/admin/${id}/toggle`),
   deleteCoupon: (id) => api.delete(`/coupons/admin/${id}`)
 };
 
@@ -121,7 +122,8 @@ export const adminService = {
   getCustomers: (params) => api.get('/admin/customers', { params }),
   toggleCustomerStatus: (id) => api.patch(`/admin/customers/${id}/toggle`),
   getSettings: () => api.get('/admin/settings'),
-  updateSettings: (data) => api.put('/admin/settings', data)
+  updateSettings: (data) => api.put('/admin/settings', data),
+  testCloudinary: (data) => api.post('/admin/uploads/test-connection', data)
 };
 
 // 8. Analytics Services

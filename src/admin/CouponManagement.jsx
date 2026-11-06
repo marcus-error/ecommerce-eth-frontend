@@ -19,11 +19,13 @@ export default function CouponManagement({ onBack }) {
     is_active: true
   });
   const [toast, setToast] = useState('');
+  const [toastType, setToastType] = useState('success');
   const [search, setSearch] = useState('');
 
-  const showToast = (msg) => {
+  const showToast = (msg, type = 'success') => {
     setToast(msg);
-    setTimeout(() => setToast(''), 3000);
+    setToastType(type);
+    setTimeout(() => setToast(''), 3500);
   };
 
   const loadCoupons = async () => {
@@ -52,7 +54,7 @@ export default function CouponManagement({ onBack }) {
         loadCoupons();
       }
     } catch (err) {
-      alert(err.message || 'Failed to create coupon');
+      showToast(err.response?.data?.message || err.message || 'Failed to create coupon', 'error');
     }
   };
 
@@ -66,7 +68,7 @@ export default function CouponManagement({ onBack }) {
         showToast(res.message);
       }
     } catch (err) {
-      alert(err.message || 'Failed to toggle coupon');
+      showToast(err.response?.data?.message || err.message || 'Failed to toggle coupon', 'error');
     }
   };
 
@@ -77,15 +79,15 @@ export default function CouponManagement({ onBack }) {
       setCoupons((prev) => prev.filter((c) => c.id !== id));
       showToast(`Coupon "${code}" deleted.`);
     } catch (err) {
-      alert(err.message || 'Failed to delete coupon');
+      showToast(err.response?.data?.message || err.message || 'Failed to delete coupon', 'error');
     }
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {toast && (
-        <div style={{ position: 'fixed', top: '84px', right: '28px', background: 'linear-gradient(135deg, #f6dda0, #d4af37)', color: '#1a0418', padding: '12px 22px', borderRadius: '999px', fontWeight: 600, fontSize: '14px', zIndex: 9999 }}>
-          ✓ {toast}
+        <div style={{ position: 'fixed', top: '84px', right: '28px', background: toastType === 'error' ? 'rgba(239,68,68,0.95)' : 'linear-gradient(135deg, #f6dda0, #d4af37)', color: toastType === 'error' ? '#fff' : '#1a0418', padding: '12px 22px', borderRadius: '999px', fontWeight: 600, fontSize: '14px', zIndex: 9999, border: toastType === 'error' ? '1px solid #fca5a5' : 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
+          {toastType === 'error' ? '⚠ ' : '✓ '} {toast}
         </div>
       )}
 

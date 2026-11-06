@@ -21,11 +21,13 @@ export default function BannerManagement({ onBack }) {
   });
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState('');
+  const [toastType, setToastType] = useState('success');
   const [search, setSearch] = useState('');
 
-  const showToast = (msg) => {
+  const showToast = (msg, type = 'success') => {
     setToast(msg);
-    setTimeout(() => setToast(''), 3000);
+    setToastType(type);
+    setTimeout(() => setToast(''), 3500);
   };
 
   const loadBanners = async () => {
@@ -95,7 +97,7 @@ export default function BannerManagement({ onBack }) {
         showToast('Banner image uploaded.');
       }
     } catch (err) {
-      alert(err.message || 'Image upload failed');
+      showToast(err.response?.data?.message || err.message || 'Image upload failed', 'error');
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -115,7 +117,7 @@ export default function BannerManagement({ onBack }) {
       setModalOpen(false);
       loadBanners();
     } catch (err) {
-      alert(err.message || 'Failed to save banner');
+      showToast(err.response?.data?.message || err.message || 'Failed to save banner', 'error');
     }
   };
 
@@ -129,7 +131,7 @@ export default function BannerManagement({ onBack }) {
         showToast(res.is_active ? 'Banner activated live!' : 'Banner deactivated.');
       }
     } catch (err) {
-      alert(err.message || 'Failed to toggle banner status');
+      showToast(err.response?.data?.message || err.message || 'Failed to toggle banner status', 'error');
     }
   };
 
@@ -140,15 +142,15 @@ export default function BannerManagement({ onBack }) {
       setBanners((prev) => prev.filter((b) => b.id !== id));
       showToast('Banner deleted.');
     } catch (err) {
-      alert(err.message || 'Failed to delete banner');
+      showToast(err.response?.data?.message || err.message || 'Failed to delete banner', 'error');
     }
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {toast && (
-        <div style={{ position: 'fixed', top: '84px', right: '28px', background: 'linear-gradient(135deg, #f6dda0, #d4af37)', color: '#1a0418', padding: '12px 22px', borderRadius: '999px', fontWeight: 600, fontSize: '14px', zIndex: 9999 }}>
-          ✓ {toast}
+        <div style={{ position: 'fixed', top: '84px', right: '28px', background: toastType === 'error' ? 'rgba(239,68,68,0.95)' : 'linear-gradient(135deg, #f6dda0, #d4af37)', color: toastType === 'error' ? '#fff' : '#1a0418', padding: '12px 22px', borderRadius: '999px', fontWeight: 600, fontSize: '14px', zIndex: 9999, border: toastType === 'error' ? '1px solid #fca5a5' : 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
+          {toastType === 'error' ? '⚠ ' : '✓ '} {toast}
         </div>
       )}
 
