@@ -5,11 +5,9 @@ import { useAuth } from '../context/AuthContext';
 import '../EthnicEdit.css';
 
 export default function Login() {
-  const [email, setEmail] = useState('customer@theethnicedit.com');
-  const [password, setPassword] = useState('customer123');
-  const [confirmPassword, setConfirmPassword] = useState('customer123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [forgotMsg, setForgotMsg] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,12 +36,6 @@ export default function Login() {
 
     if (!password) {
       setError('Please enter your password.');
-      return;
-    }
-
-    // Confirm password validation
-    if (password !== confirmPassword) {
-      setError('Passwords do not match. Please verify your confirm password.');
       return;
     }
 
@@ -225,7 +217,7 @@ export default function Login() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="customer@theethnicedit.com"
+              placeholder="your.email@example.com"
               style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', background: 'rgba(255,240,208,0.06)', border: '1px solid var(--line)', color: '#fff', fontSize: '14px', boxSizing: 'border-box' }}
             />
           </div>
@@ -276,60 +268,6 @@ export default function Login() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-          </div>
-
-          {/* Confirm Password with Eye Icon */}
-          <div>
-            <label style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--gold)', display: 'block', marginBottom: '6px' }}>
-              Confirm Password
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Re-enter password"
-                style={{
-                  width: '100%',
-                  padding: '12px 42px 12px 16px',
-                  borderRadius: '12px',
-                  background: 'rgba(255,240,208,0.06)',
-                  border: confirmPassword && password !== confirmPassword ? '1px solid #ef4444' : '1px solid var(--line)',
-                  color: '#fff',
-                  fontSize: '14px',
-                  boxSizing: 'border-box'
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--gold)',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  opacity: 0.8
-                }}
-              >
-                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
-
-          <div style={{ background: 'rgba(212,175,55,0.08)', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--line)', fontSize: '12px', color: 'var(--cream)', opacity: 0.9 }}>
-            💡 Quick Demo Credentials:<br />
-            Email: <b>customer@theethnicedit.com</b><br />
-            Password / Confirm: <b>customer123</b>
           </div>
 
           <button

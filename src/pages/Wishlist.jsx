@@ -67,7 +67,7 @@ export default function Wishlist() {
               const img = item.image_url;
               const isCss = img && img.startsWith('var(');
               const isUp = img && (img.startsWith('/uploads/') || img.startsWith('http'));
-              const bg = isCss ? img : isUp ? `url(${img})` : `url(${img || ''})`;
+              const bg = isCss ? img : img ? `url("${encodeURI(img)}")` : 'var(--i-neck)';
 
               return (
                 <div

@@ -83,7 +83,8 @@ export const orderService = {
   getUserOrders: () => api.get('/orders/my-orders'),
   getOrderById: (orderNumber) => api.get(`/orders/${orderNumber}`),
   adminGetOrders: (params) => api.get('/orders/admin/all', { params }),
-  adminUpdateOrderStatus: (id, data) => api.put(`/orders/admin/${id}/status`, data)
+  adminUpdateOrderStatus: (id, data) => api.put(`/orders/admin/${id}/status`, data),
+  adminUpdateStatus: (id, data) => api.put(`/orders/admin/${id}/status`, data)
 };
 
 // 5. Coupon Services
@@ -134,10 +135,19 @@ export const paymentService = {
   verifyPayment: (data) => api.post('/payments/verify', data)
 };
 
+// 10. Public Store Settings Service (Customer Storefront sync)
+export const settingsService = {
+  getSettings: () => api.get('/settings')
+};
+
 // 10. Customer Reviews & Feedback Services
 export const reviewService = {
   getReviews: (params) => api.get('/reviews', { params }),
-  createReview: (data) => api.post('/reviews', data)
+  createReview: (data) => api.post('/reviews', data),
+  uploadImage: (formData) =>
+    api.post('/uploads/public', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
 };
 
 export default api;

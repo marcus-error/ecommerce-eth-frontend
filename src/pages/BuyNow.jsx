@@ -220,7 +220,7 @@ export default function BuyNow() {
 
   const img = product?.image_url;
   const isCss = img && img.startsWith('var(');
-  const bg = isCss ? img : img ? `url(${img})` : 'var(--i-neck)';
+  const bg = isCss ? img : img ? `url("${encodeURI(img)}")` : 'var(--i-neck)';
 
   // Step 5: Final Order Confirmed Screen
   if (currentStep === 5 && confirmedOrder) {

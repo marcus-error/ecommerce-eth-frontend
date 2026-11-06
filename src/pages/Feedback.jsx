@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Star, CheckCircle2, ShieldCheck, MessageSquare, Sparkles, Send } from 'lucide-react';
+import { ArrowLeft, Star, CheckCircle2, ShieldCheck, MessageSquare, Sparkles, Send, Upload, Image, X } from 'lucide-react';
 import { reviewService } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import '../EthnicEdit.css';
@@ -19,6 +19,9 @@ export default function Feedback() {
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [imagePreview, setImagePreview] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -43,6 +46,37 @@ export default function Feedback() {
     loadReviews();
   }, []);
 
+  const handleImageFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Instant local preview
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+
+    setUploadingImage(true);
+    try {
+      const form = new FormData();
+      form.append('image', file);
+      const res = await reviewService.uploadImage(form);
+      if (res && res.url) {
+        setImageUrl(res.url);
+      }
+    } catch (err) {
+      console.warn('Review image upload warning:', err.message);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageUrl('');
+    setImagePreview('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
@@ -60,12 +94,14 @@ export default function Feedback() {
 
     setSubmitting(true);
     try {
+      const finalImage = imageUrl || imagePreview || null;
       const res = await reviewService.createReview({
         customer_name: customerName,
         location: location || 'Verified Patron',
         product_name: productName,
         rating,
-        comment
+        comment,
+        image_url: finalImage
       });
 
       if (res.success) {
@@ -77,6 +113,8 @@ export default function Feedback() {
         setCustomerName('');
         setLocation('');
         setComment('');
+        setImageUrl('');
+        setImagePreview('');
         setRating(5);
         loadReviews();
         setTimeout(() => setSuccessMessage(''), 6000);
@@ -340,9 +378,75 @@ export default function Feedback() {
                 />
               </div>
 
+              {/* Optional Photo Upload */}
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--gold2)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  {isTamil ? 'புகைப்படம் பதிவேற்றவும் (விருப்பத்தேர்வு)' : 'Upload Jewellery Photo (Optional)'}
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+                  <label
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '10px 18px',
+                      borderRadius: '12px',
+                      background: 'rgba(212,175,55,0.12)',
+                      border: '1px solid var(--gold)',
+                      color: 'var(--gold2)',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      fontWeight: 500
+                    }}
+                  >
+                    <Upload size={16} />
+                    <span>{uploadingImage ? (isTamil ? 'பதிவேற்றப்படுகிறது...' : 'Uploading...') : (isTamil ? 'புகைப்படத்தைத் தேர்ந்தெடு' : 'Choose Photo')}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageFileChange}
+                      style={{ display: 'none' }}
+                      disabled={uploadingImage}
+                    />
+                  </label>
+
+                  {imagePreview && (
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '10px', border: '1px solid var(--gold)' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        style={{
+                          position: 'absolute',
+                          top: '-6px',
+                          right: '-6px',
+                          background: '#ef4444',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '20px',
+                          height: '20px',
+                          display: 'grid',
+                          placeItems: 'center',
+                          cursor: 'pointer',
+                          padding: 0
+                        }}
+                        title="Remove image"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || uploadingImage}
                 className="gbtn"
                 style={{
                   width: '100%',
@@ -350,8 +454,8 @@ export default function Feedback() {
                   padding: '14px',
                   fontSize: '14px',
                   fontWeight: 600,
-                  cursor: submitting ? 'not-allowed' : 'pointer',
-                  opacity: submitting ? 0.75 : 1
+                  cursor: (submitting || uploadingImage) ? 'not-allowed' : 'pointer',
+                  opacity: (submitting || uploadingImage) ? 0.75 : 1
                 }}
               >
                 {submitting ? (isTamil ? 'அனுப்பப்படுகிறது...' : 'Publishing Review...') : (
@@ -423,6 +527,23 @@ export default function Feedback() {
                   <p style={{ margin: 0, fontSize: '13.5px', lineHeight: '1.6', opacity: 0.9 }}>
                     "{rev.comment}"
                   </p>
+
+                  {rev.image_url && (
+                    <div style={{ marginTop: '14px' }}>
+                      <img
+                        src={rev.image_url}
+                        alt="Customer look"
+                        style={{
+                          width: '100%',
+                          maxHeight: '180px',
+                          objectFit: 'cover',
+                          borderRadius: '12px',
+                          border: '1px solid rgba(212,175,55,0.3)',
+                          display: 'block'
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               ))
             )}

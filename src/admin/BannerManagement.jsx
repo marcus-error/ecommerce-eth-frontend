@@ -21,6 +21,7 @@ export default function BannerManagement({ onBack }) {
   });
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState('');
+  const [search, setSearch] = useState('');
 
   const showToast = (msg) => {
     setToast(msg);
@@ -187,6 +188,42 @@ export default function BannerManagement({ onBack }) {
         </button>
       </div>
 
+      {/* Search Bar */}
+      <div style={{ display: 'flex', gap: '10px', maxWidth: '420px' }}>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search banner headline, subtitle or CTA..."
+          style={{
+            flex: 1,
+            background: 'rgba(255,240,208,0.06)',
+            border: '1px solid var(--line)',
+            borderRadius: '999px',
+            padding: '9px 18px',
+            color: 'var(--cream)',
+            fontSize: '13px',
+            outline: 'none'
+          }}
+        />
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            style={{
+              background: 'rgba(255,240,208,0.08)',
+              border: '1px solid var(--line)',
+              color: 'var(--gold2)',
+              borderRadius: '999px',
+              padding: '0 16px',
+              fontSize: '12px',
+              cursor: 'pointer'
+            }}
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
       <div style={{ background: '#1c0418', border: '1px solid var(--line)', borderRadius: '16px', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
           <thead>
@@ -207,11 +244,22 @@ export default function BannerManagement({ onBack }) {
                   Loading banners...
                 </td>
               </tr>
-            ) : banners.map((b) => {
-              const img = b.desktop_image;
-              const isCss = img && img.startsWith('var(');
-              const isUp = img && (img.startsWith('/uploads/') || img.startsWith('http'));
-              const bg = isCss ? img : isUp ? `url(${img})` : `url(${img})`;
+            ) : (
+              banners
+                .filter((b) => {
+                  if (!search.trim()) return true;
+                  const q = search.toLowerCase();
+                  return (
+                    (b.title && b.title.toLowerCase().includes(q)) ||
+                    (b.subtitle && b.subtitle.toLowerCase().includes(q)) ||
+                    (b.button_text && b.button_text.toLowerCase().includes(q)) ||
+                    (b.type && b.type.toLowerCase().includes(q))
+                  );
+                })
+                .map((b) => {
+                  const img = b.desktop_image;
+                  const isCss = img && img.startsWith('var(');
+                  const bg = isCss ? img : img ? `url("${encodeURI(img)}")` : 'var(--i-chest)';
               return (
                 <tr key={b.id} style={{ borderBottom: '1px solid rgba(229,189,114,0.1)' }}>
                   <td style={{ padding: '12px 16px' }}>
@@ -274,7 +322,7 @@ export default function BannerManagement({ onBack }) {
                   </td>
                 </tr>
               );
-            })}
+              }))}
           </tbody>
         </table>
       </div>

@@ -289,7 +289,7 @@ export default function Account() {
                       {ord.items.map((it, idx) => {
                         const img = it.image_url;
                         const isCss = img && img.startsWith('var(');
-                        const bg = isCss ? img : img ? `url(${img})` : 'var(--i-neck)';
+                        const bg = isCss ? img : img ? `url("${encodeURI(img)}")` : 'var(--i-neck)';
 
                         return (
                           <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px' }}>
@@ -420,7 +420,7 @@ export default function Account() {
               {selectedOrder.items?.map((it, idx) => {
                 const img = it.image_url;
                 const isCss = img && img.startsWith('var(');
-                const bg = isCss ? img : img ? `url(${img})` : 'var(--i-neck)';
+                const bg = isCss ? img : img ? `url("${encodeURI(img)}")` : 'var(--i-neck)';
 
                 return (
                   <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: 'rgba(255,240,208,0.02)', border: '1px solid var(--line)', borderRadius: '12px' }}>

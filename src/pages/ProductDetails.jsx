@@ -429,7 +429,7 @@ export default function ProductDetails() {
   }
 
   const isCss = selectedImage && selectedImage.startsWith('var(');
-  const bg = isCss ? selectedImage : selectedImage ? `url(${selectedImage})` : 'var(--i-neck)';
+  const bg = isCss ? selectedImage : selectedImage ? `url("${encodeURI(selectedImage)}")` : 'var(--i-neck)';
 
   const sellingPrice = parseFloat(product.selling_price || product.price || 0);
   const originalPrice = parseFloat(product.original_price || sellingPrice * 1.15);
@@ -537,7 +537,7 @@ export default function ProductDetails() {
               {imagesList.map((im, idx) => {
                 const isSelected = selectedImage === im;
                 const isC = im && im.startsWith('var(');
-                const thumbBg = isC ? im : im ? `url(${im})` : 'var(--i-neck)';
+                const thumbBg = isC ? im : im ? `url("${encodeURI(im)}")` : 'var(--i-neck)';
 
                 return (
                   <button
@@ -1075,7 +1075,7 @@ export default function ProductDetails() {
                 .map((rv, idx) => {
                   const img = rv.image_url;
                   const isC = img && img.startsWith('var(');
-                  const bg = isC ? img : `url(${img})`;
+                  const bg = isC ? img : img ? `url("${encodeURI(img)}")` : 'var(--i-neck)';
                   return (
                     <div
                       key={idx}

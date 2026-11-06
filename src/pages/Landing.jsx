@@ -1,13 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, Heart, ShoppingBag, ArrowLeft, ArrowRight, ShieldCheck, Globe, Settings, Star, CheckCircle2, MessageSquare } from 'lucide-react';
+import { Eye, EyeOff, Heart, ShoppingBag, ArrowLeft, ArrowRight, ShieldCheck, Globe, Settings, Star, CheckCircle2, MessageSquare, Search } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { productService, categoryService, reviewService } from '../services/api';
+import { productService, categoryService, reviewService, settingsService } from '../services/api';
 import '../EthnicEdit.css';
 
 const inr = (n) => '₹' + Number(n).toLocaleString('en-IN');
+
+const resolveSafeImage = (img, fallback = 'var(--i-neck)') => {
+  if (!img) return fallback;
+  const str = String(img).trim();
+  if (str.startsWith('var(')) return str;
+  if (str.startsWith('--')) return `var(${str})`;
+  return `url("${encodeURI(str)}")`;
+};
 
 const INITIAL_SHOP_PRODUCTS = [
   { id: 1, name: 'Temple Lakshmi Necklace', c: 'Necklaces', price: 48500, i: 'var(--i-neck)', slug: 'necklaces' },
@@ -37,6 +45,7 @@ export default function Landing() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Hero Carousel State
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -53,6 +62,19 @@ export default function Landing() {
   // Toast State
   const [toastMessage, setToastMessage] = useState('');
   const [toastActive, setToastActive] = useState(false);
+
+  // Dynamic Store Settings from Database (Working hours, contact, tagline, story)
+  const [storeSettings, setStoreSettings] = useState({});
+
+  useEffect(() => {
+    settingsService.getSettings()
+      .then((res) => {
+        if (res.success && res.settings) {
+          setStoreSettings(res.settings);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Dynamic Collections from Database
   const [railCollections, setRailCollections] = useState(RAIL_COLLECTIONS);
@@ -222,7 +244,7 @@ export default function Landing() {
     );
     document.querySelectorAll('.rv').forEach((el) => rv.observe(el));
     return () => rv.disconnect();
-  }, []);
+  }, [shopProducts, railCollections, reviews]);
 
   // Hero Navigation
   const goToSlide = useCallback((index) => {
@@ -411,31 +433,6 @@ export default function Landing() {
         {toastMessage}
       </div>
 
-      {/* Universal Floating Back Button */}
-      <div style={{ position: 'fixed', bottom: '24px', left: '24px', zIndex: 99 }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: 'rgba(28,4,22,0.92)',
-            border: '1px solid var(--gold)',
-            color: 'var(--gold2)',
-            padding: '10px 20px',
-            borderRadius: '999px',
-            fontSize: '13px',
-            backdropFilter: 'blur(10px)',
-            cursor: 'pointer',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
-            transition: 'all 0.2s ease'
-          }}
-          title={t('adminBack', 'Go Back')}
-        >
-          <ArrowLeft size={16} /> {t('adminBack', 'Back')}
-        </button>
-      </div>
-
       {/* Fixed Header Container: Stacks Top Bar & Nav Without Any Overlap */}
       <div className="site-header-wrapper">
         <div className="site-top-bar">
@@ -448,7 +445,7 @@ export default function Landing() {
           <span className="logo"></span>
           <span>
             <b>THE ETHNIC EDIT</b>
-            <small>{t('heroSubtitle', 'Tradition, Beautifully Curated.')}</small>
+            <small>{storeSettings.tagline || t('heroSubtitle', 'Tradition, Beautifully Curated.')}</small>
           </span>
         </a>
 
@@ -474,28 +471,15 @@ export default function Landing() {
           >
             {t('catalogue', 'Catalogue')}
           </button>
-          {isAuthenticated && (
-            <button
-              onClick={() => {
-                setIsMenuOpen(false);
-                navigate('/orders');
-              }}
-              style={{ background: 'none', border: 'none', color: 'var(--gold2)', padding: 0, cursor: 'pointer', font: 'inherit', fontWeight: 600 }}
-            >
-              {t('myOrders', 'My Orders')} 📦
-            </button>
-          )}
-          {isAuthenticated && (
-            <button
-              onClick={() => {
-                setIsMenuOpen(false);
-                navigate('/settings');
-              }}
-              style={{ background: 'none', border: 'none', color: 'inherit', padding: 0, cursor: 'pointer', font: 'inherit' }}
-            >
-              {t('settings', 'Settings')}
-            </button>
-          )}
+          <button
+            onClick={() => {
+              setIsMenuOpen(false);
+              handleProtectedNavigation('/orders');
+            }}
+            style={{ background: 'none', border: 'none', color: 'inherit', padding: 0, cursor: 'pointer', font: 'inherit', whiteSpace: 'nowrap' }}
+          >
+            {t('myOrders', 'My Orders')}
+          </button>
           <a href="#about" className={activeSection === 'about' ? 'on' : ''} onClick={() => setIsMenuOpen(false)}>
             {t('about', 'About Us')}
           </a>
@@ -520,6 +504,42 @@ export default function Landing() {
         </nav>
 
         <div className="tools">
+          {/* Header Search Bar */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (searchQuery.trim()) {
+                handleProtectedNavigation(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+              }
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              background: 'rgba(255,240,208,0.06)',
+              border: '1px solid var(--line)',
+              borderRadius: '999px',
+              padding: '6px 14px',
+              gap: '6px'
+            }}
+          >
+            <Search size={14} style={{ color: 'var(--gold)', opacity: 0.8 }} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={isTamil ? 'நகைகளைத் தேடவும்...' : 'Search jewellery...'}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--cream)',
+                fontSize: '12.5px',
+                width: 'clamp(80px, 12vw, 150px)',
+                outline: 'none',
+                fontFamily: 'var(--font-sans)'
+              }}
+            />
+          </form>
+
           {isAuthenticated && (
             <button
               onClick={() => navigate('/settings')}
@@ -722,8 +742,7 @@ export default function Landing() {
           </div>
           <div className="rail" id="rail" ref={railRef} tabIndex={0} aria-label="Collections">
             {railItems.map((cat, idx) => {
-              const isUp = cat.i && (cat.i.startsWith('/uploads/') || cat.i.startsWith('http'));
-              const bg = isUp ? `url(${cat.i})` : cat.i.startsWith('var(') ? cat.i : `var(${cat.i})`;
+              const bg = resolveSafeImage(cat.i, 'var(--i-neck)');
               return (
                 <div
                   className="cc"
@@ -765,7 +784,7 @@ export default function Landing() {
           </div>
           <div className="grid" id="grid">
             {shopProducts.map((p) => {
-              const imgBg = p.i.startsWith('var(') ? p.i : `url(${p.i})`;
+              const imgBg = resolveSafeImage(p.i, 'var(--i-neck)');
               return (
                 <article
                   className="pc rv"
@@ -831,7 +850,7 @@ export default function Landing() {
             <div className="rv">
               <div className="kick">{isTamil ? 'எங்கள் கதை' : 'Our Story'}</div>
               <h2>{t('legacyTitle', 'Jewellery that carries a legacy.')}</h2>
-              <p>{t('legacyDesc1', 'The Ethnic Edit brings together temple-inspired designs, antique gold finishes and delicate pearl work, curated for weddings, festivals and every moment worth celebrating.')}</p>
+              <p>{storeSettings.about_story || t('legacyDesc1', 'The Ethnic Edit brings together temple-inspired designs, antique gold finishes and delicate pearl work, curated for weddings, festivals and every moment worth celebrating.')}</p>
               <p>{t('legacyDesc2', 'Each piece is chosen for its craftsmanship and its story, so what you wear feels both timeless and personal.')}</p>
               <div className="pts">
                 <span>{t('naturalGold', 'Natural Gold Finish')}</span>
@@ -904,9 +923,19 @@ export default function Landing() {
                       </span>
                     </div>
 
-                    <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--cream)', opacity: 0.9, margin: '0 0 16px', fontStyle: 'italic' }}>
+                    <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--cream)', opacity: 0.9, margin: '0 0 12px', fontStyle: 'italic' }}>
                       "{rev.comment}"
                     </p>
+
+                    {rev.image_url && (
+                      <div style={{ marginBottom: '12px', borderRadius: '10px', overflow: 'hidden', height: '110px' }}>
+                        <img
+                          src={rev.image_url}
+                          alt="Customer review photo"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ borderTop: '1px solid rgba(229,189,114,0.18)', paddingTop: '12px', marginTop: 'auto' }}>
@@ -970,9 +999,15 @@ export default function Landing() {
               <h2>{t('contactTitle', "We'd love to hear from you.")}</h2>
               <p>{t('contactSub', "Questions about a piece, a custom order or gifting? Write to us and we'll reply within a day.")}</p>
               <div className="cinfo">
-                <a href="mailto:hello@theethnicedit.com">✉ hello@theethnicedit.com</a>
-                <a href="tel:+919876543210">☎ +91 98765 43210</a>
-                <span>◉ {isTamil ? 'திங்கள் - சனி, காலை 10 - இரவு 7 IST' : 'Mon–Sat, 10am–7pm IST'}</span>
+                <a href={`mailto:${storeSettings.contact_email || 'hello@theethnicedit.com'}`}>
+                  ✉ {storeSettings.contact_email || 'hello@theethnicedit.com'}
+                </a>
+                <a href={`tel:${(storeSettings.contact_phone || '+91 98765 43210').replace(/\s+/g, '')}`}>
+                  ☎ {storeSettings.contact_phone || '+91 98765 43210'}
+                </a>
+                <span>
+                  ◉ {storeSettings.contact_hours || (isTamil ? 'திங்கள் - சனி, காலை 10 - இரவு 10 IST' : 'Mon–Sat, 10am–10pm IST')}
+                </span>
               </div>
             </div>
             <form className="f rv" id="cf" onSubmit={(e) => { e.preventDefault(); e.target.reset(); showToast(t('messageSent', 'Message sent to curators.')); }}>

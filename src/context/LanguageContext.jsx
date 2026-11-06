@@ -218,7 +218,37 @@ export const translations = {
     adminTotalRevenue: 'Total Revenue',
     adminTotalOrders: 'Total Orders',
     adminTotalProducts: 'Live Pieces',
-    adminActiveCustomers: 'Registered Customers'
+    adminActiveCustomers: 'Registered Customers',
+
+    // Extra Filter and UI keys
+    allPieces: 'All Pieces',
+    filters: 'Filters',
+    clearAll: 'Clear All',
+    allPrices: 'All Prices',
+    under15k: 'Under ₹15,000',
+    from15kTo30k: '₹15,000 – ₹30,000',
+    from30kTo50k: '₹30,000 – ₹50,000',
+    above50k: 'Above ₹50,000',
+    jewelleryStyle: 'Jewellery Style',
+    allStyles: 'All Styles',
+    templeJewellery: 'Temple Jewellery',
+    antiqueJewellery: 'Antique Jewellery',
+    americanDiamond: 'American Diamond / CZ',
+    kundanPolki: 'Kundan & Polki',
+    basraPearl: 'Basra Pearl',
+    bridalJewellery: 'Bridal Jewellery',
+    dailyWearJewellery: 'Daily Wear Jewellery',
+    festiveCollections: 'Festive Collections',
+    popularity: 'Popularity',
+    priceLowHigh: 'Price: Low to High',
+    priceHighLow: 'Price: High to Low',
+    newestFirst: 'Newest First',
+    customerRating: 'Customer Rating',
+    specialDiscount: 'Special Discount %',
+    showingPieces: 'Showing handcrafted pieces',
+    authenticHeritage: 'Authentic Heritage Collection',
+    workingHours: 'Working Hours',
+    verifiedPatron: 'Verified Patron'
   },
 
   ta: {
@@ -436,7 +466,37 @@ export const translations = {
     adminTotalRevenue: 'மொத்த வருவாய்',
     adminTotalOrders: 'மொத்த ஆர்டர்கள்',
     adminTotalProducts: 'நேரலை நகைகள்',
-    adminActiveCustomers: 'பதிவுசெய்த வாடிக்கையாளர்கள்'
+    adminActiveCustomers: 'பதிவுசெய்த வாடிக்கையாளர்கள்',
+
+    // Extra Filter and UI keys in Tamil
+    allPieces: 'அனைத்து நகைகள்',
+    filters: 'வடிகட்டிகள்',
+    clearAll: 'அனைத்தையும் நீக்கு',
+    allPrices: 'அனைத்து விலைகளும்',
+    under15k: '₹15,000 கீழ்',
+    from15kTo30k: '₹15,000 – ₹30,000',
+    from30kTo50k: '₹30,000 – ₹50,000',
+    above50k: '₹50,000 மேல்',
+    jewelleryStyle: 'நகை பாணி / வகை',
+    allStyles: 'அனைத்து பாணிகளும்',
+    templeJewellery: 'கோயில் நகைகள்',
+    antiqueJewellery: 'ஆண்டிக் நகைகள்',
+    americanDiamond: 'அமெரிக்கன் டைமண்ட் / CZ',
+    kundanPolki: 'குந்தன் & பொல்கி',
+    basraPearl: 'பஸ்ரா முத்து நகைகள்',
+    bridalJewellery: 'மணமகள் நகைகள்',
+    dailyWearJewellery: 'தினசரி பயன்பாட்டு நகைகள்',
+    festiveCollections: 'பண்டிகை காலத் தொகுப்புகள்',
+    popularity: 'பிரபலமானவை',
+    priceLowHigh: 'விலை: குறைவிலிருந்து அதிகம்',
+    priceHighLow: 'விலை: அதிகத்திலிருந்து குறைவு',
+    newestFirst: 'புதிய வரவுகள்',
+    customerRating: 'வாடிக்கையாளர் மதிப்பீடு',
+    specialDiscount: 'சிறப்பு தள்ளுபடி %',
+    showingPieces: 'காட்டப்படும் கைவினை நகைகள்',
+    authenticHeritage: 'அசல் பாரம்பரிய தொகுப்பு',
+    workingHours: 'வேலை நேரம்',
+    verifiedPatron: 'சரிபார்க்கப்பட்ட வாடிக்கையாளர்'
   }
 };
 
@@ -470,20 +530,47 @@ export const LanguageProvider = ({ children }) => {
   // Helper for category names translation
   const translateCategory = (name) => {
     if (!name) return '';
+    if (!isTamil) return name;
     const lower = name.toLowerCase().replace(/[^a-z]/g, '');
     const map = {
-      necklaces: t('necklaces', 'Necklaces'),
-      earrings: t('earrings', 'Earrings'),
-      bangles: t('bangles', 'Bangles'),
-      rings: t('rings', 'Rings'),
-      waistbelts: t('waistBelts', 'Waist Belts'),
-      necklacesets: t('necklaceSets', 'Necklace Sets'),
-      bracelets: t('bracelets', 'Bracelets'),
-      pendants: t('pendants', 'Pendants'),
-      maangtikka: t('maangTikka', 'Maang Tikka'),
-      anklets: t('anklets', 'Anklets'),
-      nosepins: t('nosePins', 'Nose Pins'),
-      hairaccessories: t('hairAccessories', 'Hair Accessories')
+      necklaces: 'கழுத்தணிகள் / அட்டிகைகள்',
+      necklace: 'கழுத்தணிகள் / அட்டிகைகள்',
+      earrings: 'காதணிகள் / ஜிமிக்கிகள்',
+      earring: 'காதணிகள் / ஜிமிக்கிகள்',
+      bangles: 'வளையல்கள்',
+      bangle: 'வளையல்கள்',
+      rings: 'மோதிரங்கள்',
+      ring: 'மோதிரங்கள்',
+      waistbelts: 'ஒட்டியாணங்கள்',
+      waistbelt: 'ஒட்டியாணங்கள்',
+      necklacesets: 'ஆர தொகுப்புகள்',
+      necklaceset: 'ஆர தொகுப்புகள்',
+      bracelets: 'கைப்பட்டைகள் / பிரேஸ்லெட்',
+      bracelet: 'கைப்பட்டைகள் / பிரேஸ்லெட்',
+      pendants: 'பதக்கங்கள்',
+      pendant: 'பதக்கங்கள்',
+      maangtikka: 'நெற்றிச்சுட்டி',
+      anklets: 'கொலுசுகள்',
+      anklet: 'கொலுசுகள்',
+      nosepins: 'மூக்குத்திகள்',
+      nosepin: 'மூக்குத்திகள்',
+      hairaccessories: 'கூந்தல் அலங்காரம்',
+      bridaljewellery: 'மணமகள் நகைகள்',
+      bridal: 'மணமகள் நகைகள்',
+      templejewellery: 'கோயில் நகைகள்',
+      temple: 'கோயில் நகைகள்',
+      antiquejewellery: 'ஆண்டிக் நகைகள்',
+      antique: 'ஆண்டிக் நகைகள்',
+      americandiamondjewellery: 'அமெரிக்கன் டைமண்ட் நகைகள்',
+      americandiamond: 'அமெரிக்கன் டைமண்ட் நகைகள்',
+      dailywearjewellery: 'தினசரி பயன்பாட்டு நகைகள்',
+      dailywear: 'தினசரி பயன்பாட்டு நகைகள்',
+      festivecollections: 'பண்டிகை காலத் தொகுப்புகள்',
+      festive: 'பண்டிகை காலத் தொகுப்புகள்',
+      mangalsutra: 'மாங்கல்யம் / தாலி சரடு',
+      allpieces: 'அனைத்து நகைகள்',
+      allcollections: 'அனைத்து தொகுப்புகள்',
+      gifting: 'பரிசுத் தொகுப்புகள்'
     };
     return map[lower] || name;
   };

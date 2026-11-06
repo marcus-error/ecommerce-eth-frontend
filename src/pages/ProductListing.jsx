@@ -345,7 +345,7 @@ export default function ProductListing() {
           categoryService.getCategories()
         ]);
 
-        if (prodRes.status === 'fulfilled' && prodRes.value?.success && prodRes.value.products?.length > 0) {
+        if (prodRes.status === 'fulfilled' && prodRes.value?.success && Array.isArray(prodRes.value.products)) {
           const dbProducts = prodRes.value.products.map((p) => ({
             ...p,
             selling_price: parseFloat(p.selling_price || p.price || 0),
@@ -360,18 +360,20 @@ export default function ProductListing() {
             rating: parseFloat(p.rating || 4.8),
             reviews_count: p.reviews_count || 65
           }));
-          // Use actual database products as primary source of truth
           setProducts(dbProducts);
         }
 
-        if (catRes.status === 'fulfilled' && catRes.value.success && catRes.value.categories?.length > 0) {
-          const customList = [...IMITATION_CATEGORIES];
-          catRes.value.categories.forEach((c) => {
-            if (!customList.some((item) => item.slug === c.slug)) {
-              customList.push({ id: c.slug || c.id.toString(), name: c.name, slug: c.slug || c.id.toString() });
-            }
-          });
-          setCategories(customList);
+        if (catRes.status === 'fulfilled' && catRes.value?.success && Array.isArray(catRes.value.categories)) {
+          // LIVE DATABASE CATEGORIES ARE THE STRICT SOURCE OF TRUTH
+          // Whatever is deleted in admin is deleted here immediately.
+          const dbCats = catRes.value.categories.map((c) => ({
+            id: c.slug || c.id.toString(),
+            name: c.name,
+            slug: c.slug || c.id.toString(),
+            img: c.image_url || 'var(--i-neck)',
+            tag: 'Collection'
+          }));
+          setCategories(dbCats);
         }
       } catch (e) {
         console.warn('API fetch notice:', e.message);
@@ -629,7 +631,7 @@ export default function ProductListing() {
             {t('catalogue', 'Catalogue')}
           </span>
           <Link to="/wishlist">{t('wishlist', 'Wishlist')} ({wishlistCount})</Link>
-          {isAuthenticated && <Link to="/orders" style={{ color: "var(--gold2)" }}>{t('myOrders', 'My Orders')}</Link>}
+          <Link to="/orders" style={{ whiteSpace: 'nowrap' }}>{t('myOrders', 'My Orders')}</Link>
           {isAuthenticated && <Link to="/settings">{t('settings', 'Settings')}</Link>}
           <Link to={isAuthenticated ? '/account' : '/login'}>
             {isAuthenticated ? user?.name : t('signIn', 'Sign In')}
@@ -736,7 +738,9 @@ export default function ProductListing() {
             {/* Sorting Dropdown */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <SlidersHorizontal size={14} style={{ color: 'var(--gold)' }} />
-              <span style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.7 }}>Sort By:</span>
+              <span style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.7 }}>
+                {t('sortBy', 'Sort By')}:
+              </span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
@@ -750,12 +754,12 @@ export default function ProductListing() {
                   cursor: 'pointer'
                 }}
               >
-                <option value="popularity">Popularity</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="newest">Newest First</option>
-                <option value="rating">Customer Rating</option>
-                <option value="discount">Special Discount %</option>
+                <option value="popularity">{t('popularity', 'Popularity')}</option>
+                <option value="price-low">{t('priceLowHigh', 'Price: Low to High')}</option>
+                <option value="price-high">{t('priceHighLow', 'Price: High to Low')}</option>
+                <option value="newest">{t('newestFirst', 'Newest First')}</option>
+                <option value="rating">{t('customerRating', 'Customer Rating')}</option>
+                <option value="discount">{t('specialDiscount', 'Special Discount %')}</option>
               </select>
             </div>
 
@@ -803,37 +807,55 @@ export default function ProductListing() {
 
         {/* Category Pill Horizontal Rail */}
         <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px', marginBottom: '24px', scrollbarWidth: 'none' }}>
-          {categories.map((c) => {
-            const isSelected = selectedCategory === (c.slug || c.id);
-            return (
-              <button
-                key={c.id}
-                onClick={() => {
-                  const targetSlug = c.slug || c.id;
-                  setSelectedCategory(targetSlug);
-                  if (targetSlug === 'all') {
-                    navigate('/shop', { replace: true });
-                  } else {
+          <button
+            onClick={() => {
+              setSelectedCategory('all');
+              navigate('/shop', { replace: true });
+            }}
+            style={{
+              padding: '7px 18px',
+              borderRadius: '999px',
+              whiteSpace: 'nowrap',
+              border: selectedCategory === 'all' ? '1px solid var(--gold2)' : '1px solid var(--line)',
+              background: selectedCategory === 'all' ? 'linear-gradient(135deg, rgba(212,175,55,0.3), rgba(66,8,51,0.6))' : 'rgba(255,240,208,0.04)',
+              color: selectedCategory === 'all' ? 'var(--gold2)' : 'var(--cream)',
+              fontSize: '12px',
+              cursor: 'pointer',
+              fontWeight: selectedCategory === 'all' ? 600 : 400,
+              transition: 'all 0.2s'
+            }}
+          >
+            {isTamil ? '✨ அனைத்து நகைகள்' : '✨ All Pieces'}
+          </button>
+          {categories
+            .filter((c) => c.slug !== 'all' && c.id !== 'all')
+            .map((c) => {
+              const isSelected = selectedCategory === (c.slug || c.id);
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => {
+                    const targetSlug = c.slug || c.id;
+                    setSelectedCategory(targetSlug);
                     navigate(`/category/${targetSlug}`, { replace: true });
-                  }
-                }}
-                style={{
-                  padding: '7px 16px',
-                  borderRadius: '999px',
-                  whiteSpace: 'nowrap',
-                  border: isSelected ? '1px solid var(--gold2)' : '1px solid var(--line)',
-                  background: isSelected ? 'linear-gradient(135deg, rgba(212,175,55,0.3), rgba(66,8,51,0.6))' : 'rgba(255,240,208,0.04)',
-                  color: isSelected ? 'var(--gold2)' : 'var(--cream)',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  fontWeight: isSelected ? 600 : 400,
-                  transition: 'all 0.2s'
-                }}
-              >
-                {translateCategory(c.name)}
-              </button>
-            );
-          })}
+                  }}
+                  style={{
+                    padding: '7px 16px',
+                    borderRadius: '999px',
+                    whiteSpace: 'nowrap',
+                    border: isSelected ? '1px solid var(--gold2)' : '1px solid var(--line)',
+                    background: isSelected ? 'linear-gradient(135deg, rgba(212,175,55,0.3), rgba(66,8,51,0.6))' : 'rgba(255,240,208,0.04)',
+                    color: isSelected ? 'var(--gold2)' : 'var(--cream)',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    fontWeight: isSelected ? 600 : 400,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {translateCategory(c.name)}
+                </button>
+              );
+            })}
         </div>
 
         {/* Layout: Sidebar Filter + Product Content */}
@@ -857,7 +879,7 @@ export default function ProductListing() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Filter size={16} style={{ color: 'var(--gold)' }} />
                 <span style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '18px', fontWeight: 600, color: 'var(--gold2)' }}>
-                  Filters
+                  {t('filters', 'Filters')}
                 </span>
                 {activeFiltersCount > 0 && (
                   <span style={{ background: 'var(--gold)', color: '#12020e', borderRadius: '50%', width: '18px', height: '18px', fontSize: '10px', display: 'grid', placeItems: 'center', fontWeight: 'bold' }}>
@@ -870,7 +892,7 @@ export default function ProductListing() {
                   onClick={handleClearFilters}
                   style={{ background: 'none', border: 'none', color: '#f87171', fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'underline' }}
                 >
-                  <RotateCcw size={11} /> Clear All
+                  <RotateCcw size={11} /> {t('clearAll', 'Clear All')}
                 </button>
               )}
             </div>
@@ -878,15 +900,15 @@ export default function ProductListing() {
             {/* Filter 1: Price Range */}
             <div style={{ marginBottom: '20px', borderBottom: '1px solid rgba(212,175,55,0.1)', paddingBottom: '16px' }}>
               <h4 style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--gold2)', margin: '0 0 10px' }}>
-                Price Range
+                {t('priceRange', 'Price Range')}
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
                 {[
-                  { id: 'all', label: 'All Prices' },
-                  { id: 'under-15', label: 'Under ₹15,000' },
-                  { id: '15-30', label: '₹15,000 – ₹30,000' },
-                  { id: '30-50', label: '₹30,000 – ₹50,000' },
-                  { id: 'above-50', label: 'Above ₹50,000' }
+                  { id: 'all', label: t('allPrices', 'All Prices') },
+                  { id: 'under-15', label: t('under15k', 'Under ₹15,000') },
+                  { id: '15-30', label: t('from15kTo30k', '₹15,000 – ₹30,000') },
+                  { id: '30-50', label: t('from30kTo50k', '₹30,000 – ₹50,000') },
+                  { id: 'above-50', label: t('above50k', 'Above ₹50,000') }
                 ].map((p) => (
                   <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                     <input
@@ -907,20 +929,27 @@ export default function ProductListing() {
             {/* Filter 2: Jewellery Style / Type */}
             <div style={{ marginBottom: '20px', borderBottom: '1px solid rgba(212,175,55,0.1)', paddingBottom: '16px' }}>
               <h4 style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--gold2)', margin: '0 0 10px' }}>
-                Jewellery Style
+                {t('jewelleryStyle', 'Jewellery Style')}
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
-                {['all', 'Temple Jewellery', 'Antique Jewellery', 'American Diamond / CZ', 'Kundan & Polki', 'Basra Pearl'].map((style) => (
-                  <label key={style} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                {[
+                  { id: 'all', label: t('allStyles', 'All Styles') },
+                  { id: 'Temple Jewellery', label: t('templeJewellery', 'Temple Jewellery') },
+                  { id: 'Antique Jewellery', label: t('antiqueJewellery', 'Antique Jewellery') },
+                  { id: 'American Diamond / CZ', label: t('americanDiamond', 'American Diamond / CZ') },
+                  { id: 'Kundan & Polki', label: t('kundanPolki', 'Kundan & Polki') },
+                  { id: 'Basra Pearl', label: t('basraPearl', 'Basra Pearl') }
+                ].map((item) => (
+                  <label key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                     <input
                       type="radio"
                       name="jewelleryType"
-                      checked={selectedJewelleryType === style}
-                      onChange={() => setSelectedJewelleryType(style)}
+                      checked={selectedJewelleryType === item.id}
+                      onChange={() => setSelectedJewelleryType(item.id)}
                       style={{ accentColor: 'var(--gold)' }}
                     />
-                    <span style={{ opacity: selectedJewelleryType === style ? 1 : 0.8, color: selectedJewelleryType === style ? 'var(--gold2)' : 'var(--cream)' }}>
-                      {style === 'all' ? 'All Styles' : style}
+                    <span style={{ opacity: selectedJewelleryType === item.id ? 1 : 0.8, color: selectedJewelleryType === item.id ? 'var(--gold2)' : 'var(--cream)' }}>
+                      {item.label}
                     </span>
                   </label>
                 ))}
@@ -930,20 +959,25 @@ export default function ProductListing() {
             {/* Filter 3: Material */}
             <div style={{ marginBottom: '20px', borderBottom: '1px solid rgba(212,175,55,0.1)', paddingBottom: '16px' }}>
               <h4 style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--gold2)', margin: '0 0 10px' }}>
-                Base Material
+                {isTamil ? 'உலோகம்' : 'Base Material'}
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
-                {['all', '24k Antique Gold Plated', 'Cast Artisan Brass', 'Copper-Brass Alloy'].map((mat) => (
-                  <label key={mat} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                {[
+                  { id: 'all', label: isTamil ? 'அனைத்து உலோகங்களும்' : 'All Materials' },
+                  { id: '24k Antique Gold Plated', label: isTamil ? '24k ஆண்டிக் தங்க பூச்சு' : '24k Antique Gold Plated' },
+                  { id: 'Cast Artisan Brass', label: isTamil ? 'பாரம்பரிய பித்தளை' : 'Cast Artisan Brass' },
+                  { id: 'Copper-Brass Alloy', label: isTamil ? 'செம்பு-பித்தளை கலவை' : 'Copper-Brass Alloy' }
+                ].map((mat) => (
+                  <label key={mat.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                     <input
                       type="radio"
                       name="material"
-                      checked={selectedMaterial === mat}
-                      onChange={() => setSelectedMaterial(mat)}
+                      checked={selectedMaterial === mat.id}
+                      onChange={() => setSelectedMaterial(mat.id)}
                       style={{ accentColor: 'var(--gold)' }}
                     />
-                    <span style={{ opacity: selectedMaterial === mat ? 1 : 0.8, color: selectedMaterial === mat ? 'var(--gold2)' : 'var(--cream)' }}>
-                      {mat === 'all' ? 'All Materials' : mat}
+                    <span style={{ opacity: selectedMaterial === mat.id ? 1 : 0.8, color: selectedMaterial === mat.id ? 'var(--gold2)' : 'var(--cream)' }}>
+                      {mat.label}
                     </span>
                   </label>
                 ))}
@@ -953,20 +987,26 @@ export default function ProductListing() {
             {/* Filter 4: Occasion */}
             <div style={{ marginBottom: '20px', borderBottom: '1px solid rgba(212,175,55,0.1)', paddingBottom: '16px' }}>
               <h4 style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--gold2)', margin: '0 0 10px' }}>
-                Occasion
+                {isTamil ? 'நிகழ்வு / பயன்பாடு' : 'Occasion'}
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
-                {['all', 'Bridal', 'Festive', 'Party & Cocktail', 'Daily Wear'].map((occ) => (
-                  <label key={occ} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                {[
+                  { id: 'all', label: isTamil ? 'அனைத்து நிகழ்வுகளும்' : 'All Occasions' },
+                  { id: 'Bridal', label: isTamil ? 'திருமணம் / முகூர்த்தம்' : 'Bridal' },
+                  { id: 'Festive', label: isTamil ? 'பண்டிகை கொண்டாட்டம்' : 'Festive' },
+                  { id: 'Party & Cocktail', label: isTamil ? 'வரவேற்பு & விருந்து' : 'Party & Cocktail' },
+                  { id: 'Daily Wear', label: isTamil ? 'தினசரி பயன்பாடு' : 'Daily Wear' }
+                ].map((occ) => (
+                  <label key={occ.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                     <input
                       type="radio"
                       name="occasion"
-                      checked={selectedOccasion === occ}
-                      onChange={() => setSelectedOccasion(occ)}
+                      checked={selectedOccasion === occ.id}
+                      onChange={() => setSelectedOccasion(occ.id)}
                       style={{ accentColor: 'var(--gold)' }}
                     />
-                    <span style={{ opacity: selectedOccasion === occ ? 1 : 0.8, color: selectedOccasion === occ ? 'var(--gold2)' : 'var(--cream)' }}>
-                      {occ === 'all' ? 'All Occasions' : occ}
+                    <span style={{ opacity: selectedOccasion === occ.id ? 1 : 0.8, color: selectedOccasion === occ.id ? 'var(--gold2)' : 'var(--cream)' }}>
+                      {occ.label}
                     </span>
                   </label>
                 ))}
@@ -976,14 +1016,14 @@ export default function ProductListing() {
             {/* Filter 5: Minimum Customer Rating */}
             <div style={{ marginBottom: '20px', borderBottom: '1px solid rgba(212,175,55,0.1)', paddingBottom: '16px' }}>
               <h4 style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--gold2)', margin: '0 0 10px' }}>
-                Customer Rating
+                {isTamil ? 'வாடிக்கையாளர் மதிப்பீடு' : 'Customer Rating'}
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
                 {[
-                  { val: 0, label: 'All Ratings' },
-                  { val: 4.5, label: '4.5★ & Above' },
-                  { val: 4.0, label: '4.0★ & Above' },
-                  { val: 3.5, label: '3.5★ & Above' }
+                  { val: 0, label: isTamil ? 'அனைத்து மதிப்பீடுகளும்' : 'All Ratings' },
+                  { val: 4.5, label: isTamil ? '4.5★ & அதற்கு மேல்' : '4.5★ & Above' },
+                  { val: 4.0, label: isTamil ? '4.0★ & அதற்கு மேல்' : '4.0★ & Above' },
+                  { val: 3.5, label: isTamil ? '3.5★ & அதற்கு மேல்' : '3.5★ & Above' }
                 ].map((r) => (
                   <label key={r.val} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                     <input
@@ -1004,7 +1044,7 @@ export default function ProductListing() {
             {/* Filter 6: Stock & Availability */}
             <div>
               <h4 style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--gold2)', margin: '0 0 10px' }}>
-                Availability
+                {isTamil ? 'இருப்பு நிலை' : 'Availability'}
               </h4>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', cursor: 'pointer' }}>
                 <input
@@ -1013,7 +1053,7 @@ export default function ProductListing() {
                   onChange={(e) => setInStockOnly(e.target.checked)}
                   style={{ accentColor: 'var(--gold)' }}
                 />
-                <span>Exclude Out of Stock</span>
+                <span>{isTamil ? 'இருப்பில் உள்ளவை மட்டும்' : 'Exclude Out of Stock'}</span>
               </label>
             </div>
           </aside>
@@ -1047,7 +1087,7 @@ export default function ProductListing() {
                 {sorted.map((p) => {
                   const img = p.image_url || p.images?.[0]?.image_url;
                   const isCss = img && img.startsWith('var(');
-                  const bg = isCss ? img : img ? `url(${img})` : 'var(--i-neck)';
+                  const bg = isCss ? img : img ? `url("${encodeURI(img)}")` : 'var(--i-neck)';
                   const price = parseFloat(p.selling_price || p.price || 0);
                   const originalPrice = parseFloat(p.original_price || price * 1.15);
                   const discountPct = originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
@@ -1170,7 +1210,7 @@ export default function ProductListing() {
                 {sorted.map((p) => {
                   const img = p.image_url || p.images?.[0]?.image_url;
                   const isCss = img && img.startsWith('var(');
-                  const bg = isCss ? img : img ? `url(${img})` : 'var(--i-neck)';
+                  const bg = isCss ? img : img ? `url("${encodeURI(img)}")` : 'var(--i-neck)';
                   const price = parseFloat(p.selling_price || p.price || 0);
                   const originalPrice = parseFloat(p.original_price || price * 1.15);
                   const discountPct = originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
@@ -1345,3 +1385,4 @@ export default function ProductListing() {
     </div>
   );
 }
+

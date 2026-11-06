@@ -20,6 +20,7 @@ export default function CategoryManagement({ onViewProducts, onBack }) {
   });
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState('');
+  const [search, setSearch] = useState('');
 
   const showToast = (msg) => {
     setToast(msg);
@@ -158,6 +159,42 @@ export default function CategoryManagement({ onViewProducts, onBack }) {
         </button>
       </div>
 
+      {/* Search Bar */}
+      <div style={{ display: 'flex', gap: '10px', maxWidth: '420px' }}>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={isTamil ? 'தொகுப்புப் பெயரைத் தேடுங்கள்...' : 'Search collection or description...'}
+          style={{
+            flex: 1,
+            background: 'rgba(255,240,208,0.06)',
+            border: '1px solid var(--line)',
+            borderRadius: '999px',
+            padding: '9px 18px',
+            color: 'var(--cream)',
+            fontSize: '13px',
+            outline: 'none'
+          }}
+        />
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            style={{
+              background: 'rgba(255,240,208,0.08)',
+              border: '1px solid var(--line)',
+              color: 'var(--gold2)',
+              borderRadius: '999px',
+              padding: '0 16px',
+              fontSize: '12px',
+              cursor: 'pointer'
+            }}
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
       <div style={{ background: '#1c0418', border: '1px solid var(--line)', borderRadius: '16px', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
           <thead>
@@ -177,10 +214,22 @@ export default function CategoryManagement({ onViewProducts, onBack }) {
                   Loading categories...
                 </td>
               </tr>
-            ) : categories.map((c) => {
-              const img = c.image_url;
-              const isUp = img && (img.startsWith('/uploads/') || img.startsWith('http'));
-              const bg = isUp ? `url(${img})` : `url(${img})`;
+            ) : (
+              categories
+                .filter((c) => {
+                  if (!search.trim()) return true;
+                  const q = search.toLowerCase();
+                  return (
+                    (c.name && c.name.toLowerCase().includes(q)) ||
+                    (c.description && c.description.toLowerCase().includes(q)) ||
+                    (c.slug && c.slug.toLowerCase().includes(q))
+                  );
+                })
+                .map((c) => {
+                  const img = c.image_url;
+                  const bg = img
+                    ? (img.startsWith('var(') ? img : `url("${encodeURI(img)}")`)
+                    : 'var(--i-neck)';
               return (
                 <tr key={c.id} style={{ borderBottom: '1px solid rgba(229,189,114,0.1)' }}>
                   <td style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -254,7 +303,7 @@ export default function CategoryManagement({ onViewProducts, onBack }) {
                   </td>
                 </tr>
               );
-            })}
+              }))}
           </tbody>
         </table>
       </div>

@@ -4,8 +4,8 @@ import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState('admin@theethnicedit.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -148,12 +148,6 @@ export default function AdminLogin() {
             </div>
           </div>
 
-          <div style={{ background: 'rgba(212,175,55,0.08)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '12px', color: 'var(--cream)', opacity: 0.85 }}>
-            💡 Administrator credentials:<br />
-            Email: <b>admin@theethnicedit.com</b><br />
-            Password: <b>admin123</b>
-          </div>
-
           <button
             type="submit"
             className="gbtn"
@@ -174,3 +168,4 @@ export default function AdminLogin() {
     </div>
   );
 }
+

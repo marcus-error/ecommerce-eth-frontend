@@ -19,6 +19,7 @@ export default function CouponManagement({ onBack }) {
     is_active: true
   });
   const [toast, setToast] = useState('');
+  const [search, setSearch] = useState('');
 
   const showToast = (msg) => {
     setToast(msg);
@@ -124,6 +125,42 @@ export default function CouponManagement({ onBack }) {
         </button>
       </div>
 
+      {/* Search Bar */}
+      <div style={{ display: 'flex', gap: '10px', maxWidth: '420px' }}>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search coupon code or discount value..."
+          style={{
+            flex: 1,
+            background: 'rgba(255,240,208,0.06)',
+            border: '1px solid var(--line)',
+            borderRadius: '999px',
+            padding: '9px 18px',
+            color: 'var(--cream)',
+            fontSize: '13px',
+            outline: 'none'
+          }}
+        />
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            style={{
+              background: 'rgba(255,240,208,0.08)',
+              border: '1px solid var(--line)',
+              color: 'var(--gold2)',
+              borderRadius: '999px',
+              padding: '0 16px',
+              fontSize: '12px',
+              cursor: 'pointer'
+            }}
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
       <div style={{ background: '#1c0418', border: '1px solid var(--line)', borderRadius: '16px', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
           <thead>
@@ -143,8 +180,24 @@ export default function CouponManagement({ onBack }) {
                   Loading coupons...
                 </td>
               </tr>
-            ) : coupons.length > 0 ? (
-              coupons.map((c) => (
+            ) : coupons.filter((c) => {
+                if (!search.trim()) return true;
+                const q = search.toLowerCase();
+                return (
+                  (c.code && c.code.toLowerCase().includes(q)) ||
+                  String(c.value).includes(q)
+                );
+              }).length > 0 ? (
+              coupons
+                .filter((c) => {
+                  if (!search.trim()) return true;
+                  const q = search.toLowerCase();
+                  return (
+                    (c.code && c.code.toLowerCase().includes(q)) ||
+                    String(c.value).includes(q)
+                  );
+                })
+                .map((c) => (
                 <tr key={c.id} style={{ borderBottom: '1px solid rgba(229,189,114,0.1)' }}>
                   <td style={{ padding: '12px 16px', color: 'var(--gold2)', fontWeight: 700, letterSpacing: '0.08em' }}>
                     {c.code}

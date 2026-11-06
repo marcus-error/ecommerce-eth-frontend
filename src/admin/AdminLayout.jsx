@@ -237,29 +237,6 @@ export default function AdminLayout() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {/* Language Switcher */}
-            <button
-              onClick={() => setLang(lang === 'en' ? 'ta' : 'en')}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                background: 'rgba(212,175,55,0.12)',
-                border: '1px solid var(--gold)',
-                color: 'var(--gold2)',
-                padding: '6px 14px',
-                borderRadius: '999px',
-                fontSize: '12.5px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap'
-              }}
-              title={isTamil ? 'Switch to English' : 'தமிழுக்கு மாறவும்'}
-            >
-              <Globe size={14} />
-              <span>{isTamil ? 'English' : 'தமிழ்'}</span>
-            </button>
-
             <span style={{ fontSize: '13px', color: 'var(--cream)', opacity: 0.85, marginRight: '4px' }}>
               {t('adminLoggedInAs', 'Logged in as')} <b style={{ color: 'var(--gold2)' }}>{user?.name || (isTamil ? 'நிர்வாகி' : 'Administrator')}</b>
             </span>

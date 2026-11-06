@@ -101,9 +101,11 @@ export default function ProductManagement({ initialCategory = '', onClearCategor
 
   const openAddModal = () => {
     setEditingProduct(null);
+    const catList = (categories && categories.length > 0) ? categories : ALL_COLLECTIONS;
+    const defaultCat = (categoryFilter && categoryFilter !== 'all') ? categoryFilter : (catList[0]?.id || 1);
     setFormData({
       name: '',
-      category_id: (categoryFilter && categoryFilter !== 'all') ? categoryFilter : (categories[0]?.id || 1),
+      category_id: defaultCat,
       short_description: '',
       description: '',
       original_price: '15000',
@@ -189,13 +191,15 @@ export default function ProductManagement({ initialCategory = '', onClearCategor
     setSaveLoading(true);
 
     try {
+      const activeCatId = formData.category_id || ((categories && categories.length > 0) ? categories[0]?.id : 1);
+      const payload = { ...formData, category_id: activeCatId };
       if (editingProduct) {
-        const res = await productService.updateProduct(editingProduct.id, formData);
+        const res = await productService.updateProduct(editingProduct.id, payload);
         if (res.success) {
           showToast(`"${res.product.name}" updated successfully! Changes are live.`);
         }
       } else {
-        const res = await productService.createProduct(formData);
+        const res = await productService.createProduct(payload);
         if (res.success) {
           showToast(`"${res.product.name}" published! It is now live on the customer website.`);
         }
@@ -379,8 +383,7 @@ export default function ProductManagement({ initialCategory = '', onClearCategor
                   let img = p.images && p.images[0]?.image_url;
                   if (!img && p.image_url) img = p.image_url;
                   const isCssVar = img && img.startsWith('var(');
-                  const isUp = img && (img.startsWith('/uploads/') || img.startsWith('http'));
-                  const bgStyle = isCssVar ? img : isUp ? `url(${img})` : `url(${img})`;
+                  const bgStyle = isCssVar ? img : img ? `url("${encodeURI(img)}")` : 'var(--i-neck)';
 
                   return (
                     <tr key={p.id} style={{ borderBottom: '1px solid rgba(229,189,114,0.1)' }}>
@@ -520,7 +523,7 @@ export default function ProductManagement({ initialCategory = '', onClearCategor
                     style={{ width: '100%', background: '#24061d', border: '1px solid var(--line)', padding: '10px 14px', borderRadius: '8px', color: '#fff' }}
                   >
                     <option value="">Select Collection</option>
-                    {categories.map((c) => (
+                    {(categories && categories.length > 0 ? categories : ALL_COLLECTIONS).map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
                       </option>
@@ -667,9 +670,8 @@ export default function ProductManagement({ initialCategory = '', onClearCategor
                 {/* Image Thumbnails Previews */}
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   {formData.images.map((img, idx) => {
-                    const isCss = img.startsWith('var(');
-                    const isUp = img.startsWith('/uploads/') || img.startsWith('http');
-                    const bg = isCss ? img : isUp ? `url(${img})` : `url(${img})`;
+                    const isCss = img && img.startsWith('var(');
+                    const bg = isCss ? img : img ? `url("${encodeURI(img)}")` : 'var(--i-neck)';
                     return (
                       <div
                         key={idx}

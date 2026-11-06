@@ -50,15 +50,18 @@ export default function DashboardOverview({ onNavigate, onBack }) {
     );
   }
 
-  if (error || !data) {
-    return (
-      <div style={{ background: 'rgba(239,68,68,0.2)', color: '#fca5a5', padding: '16px', borderRadius: '12px' }}>
-        {error || 'Unable to retrieve dashboard stats.'}
-      </div>
-    );
-  }
-
-  const { stats, recent_orders = [], best_sellers = [], category_distribution = [], monthly_chart = [] } = data;
+  const stats = data?.stats || {
+    total_revenue: 0,
+    total_orders: 0,
+    pending_orders: 0,
+    total_products: 0,
+    low_stock_count: 0,
+    total_customers: 0
+  };
+  const recent_orders = data?.recent_orders || [];
+  const best_sellers = data?.best_sellers || [];
+  const category_distribution = data?.category_distribution || [];
+  const monthly_chart = data?.monthly_chart || [];
 
   const statCards = [
     { label: t('adminTotalRevenue', 'Total Revenue'), value: inr(stats.total_revenue || 0), icon: '💰', sub: 'All non-cancelled orders' },
@@ -69,6 +72,14 @@ export default function DashboardOverview({ onNavigate, onBack }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+      {error && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', padding: '12px 18px', borderRadius: '12px', fontSize: '13px' }}>
+          <span>⚠️ {error}</span>
+          <button onClick={loadStats} style={{ background: 'var(--gold)', color: '#1a0418', border: 'none', padding: '6px 14px', borderRadius: '999px', fontWeight: 600, fontSize: '12px', cursor: 'pointer' }}>
+            Retry
+          </button>
+        </div>
+      )}
       {/* Top Header with Back Button */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
